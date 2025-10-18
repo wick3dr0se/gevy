@@ -45,7 +45,7 @@ const isOwnProfile = targetProfile.id === session.user.id;
 // Sync GitHub data if stale (hourly)
 const providerToken = session.provider_token;
 if (providerToken && shouldSyncProfile(targetProfile)) {
-    await syncGitHubProfile(targetProfile.id, providerToken);
+    await syncGitHubProfile(targetProfile.id, providerToken, supabase);
     const { data: refreshed } = await supabase
         .from("profiles")
         .select("*")
@@ -54,7 +54,7 @@ if (providerToken && shouldSyncProfile(targetProfile)) {
     if (refreshed) targetProfile = refreshed;
 }
 
-// ✅ Use cached GitHub data from the DB
+// Use cached GitHub data from the DB
 let repos = targetProfile.repos || [];
 let profileReadmeHtml = targetProfile.readme_html || null;
 
