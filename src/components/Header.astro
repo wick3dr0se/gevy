@@ -1,0 +1,67 @@
+---
+const { user } = Astro.props;
+---
+
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center gap-8">
+                <a href="/dashboard" class="text-xl font-bold text-gray-900">
+                    Gevy
+                </a>
+                {
+                    user && (
+                        <nav class="hidden md:flex gap-6">
+                            <a
+                                href="/dashboard"
+                                class="text-gray-600 hover:text-gray-900"
+                            >
+                                Dashboard
+                            </a>
+                            <a
+                                href="/feed"
+                                class="text-gray-600 hover:text-gray-900"
+                            >
+                                Feed
+                            </a>
+                            <a
+                                href="/discover"
+                                class="text-gray-600 hover:text-gray-900"
+                            >
+                                Discover
+                            </a>
+                        </nav>
+                    )
+                }
+            </div>
+
+            {
+                user && (
+                    <div class="flex items-center gap-4">
+                        <a
+                            href={`/profile/${user.github_username}`}
+                            class="flex items-center gap-2"
+                        >
+                            <img
+                                src={user.avatar_url}
+                                alt={user.github_username}
+                                class="w-8 h-8 rounded-full"
+                            />
+                            <span class="text-gray-700 hidden sm:inline">
+                                {user.github_username}
+                            </span>
+                        </a>
+                        <form action="/api/auth/logout" method="POST">
+                            <button
+                                type="submit"
+                                class="text-sm text-gray-600 hover:text-gray-900"
+                            >
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                )
+            }
+        </div>
+    </div>
+</header>

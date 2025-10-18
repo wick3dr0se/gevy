@@ -1,0 +1,358 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import PostCard from "../../components/PostCard.astro";
+import { createServerSupabaseClient } from "../../lib/supabase";
+import { GitHubAPI, type GitHubRepo } from "../../lib/github";
+
+const supabase = createServerSupabaseClient(Astro.cookies);
+const {
+    data: { session },
+} = await supabase.auth.getSession();
+
+if (!session) {
+    return Astro.redirect("/");
+}
+
+const { username } = Astro.params as { username: string };
+
+// Get current user profile
+const { data: currentUserProfile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", session.user.id)
+    .single();
+
+// Get target user profile
+const { data: targetProfile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("github_username", username)
+    .single();
+
+if (!targetProfile) {
+    return Astro.redirect("/dashboard");
+}
+
+const isOwnProfile = targetProfile.id === session.user.id;
+
+// Check if following
+const { data: followData } = await supabase
+    .from("follows")
+    .select("id")
+    .eq("follower_id", session.user.id)
+    .eq("following_id", targetProfile.id)
+    .single();
+
+const isFollowing = !!followData;
+
+// Get user's posts
+const { data: posts } = await supabase
+    .from("posts")
+    .select(
+        `
+    *,
+    profiles (*)
+  `,
+    )
+    .eq("author_id", targetProfile.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+// Get likes and comments count for each post
+const postsWithMeta = await Promise.all(
+    (posts || []).map(async (post) => {
+        const { count: likesCount } = await supabase
+            .from("post_likes")
+            .select("*", { count: "exact", head: true })
+            .eq("post_id", post.id);
+
+        const { data: userLike } = await supabase
+            .from("post_likes")
+            .select("id")
+            .eq("post_id", post.id)
+            .eq("user_id", session.user.id)
+            .single();
+
+        const { count: commentsCount } = await supabase
+            .from("comments")
+            .select("*", { count: "exact", head: true })
+            .eq("post_id", post.id);
+
+        return {
+            ...post,
+            likes_count: likesCount || 0,
+            comments_count: commentsCount || 0,
+            is_liked: !!userLike,
+        };
+    }),
+);
+
+// Get GitHub repos
+const providerToken = session.provider_token;
+interface Repo {
+    name: string;
+    html_url: string;
+    description?: string;
+    language?: string;
+    stargazers_count: number;
+    forks_count: number;
+}
+
+let repos: Repo[] = [];
+
+if (providerToken) {
+    const github = new GitHubAPI(providerToken);
+    try {
+        repos = await github.getRepos(username, 6);
+    } catch (error) {
+        console.error("GitHub API error:", error);
+    }
+}
+---
+
+<Layout title={`${targetProfile.name || targetProfile.github_username} - Gevy`}>
+    <Header user={currentUserProfile} />
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Profile Card -->
+                <div
+                    class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+                >
+                    <div class="flex items-start gap-6">
+                        <img
+                            src={targetProfile.avatar_url}
+                            alt={targetProfile.github_username}
+                            class="w-24 h-24 rounded-full"
+                        />
+
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h1
+                                        class="text-2xl font-bold text-gray-900"
+                                    >
+                                        {
+                                            targetProfile.name ||
+                                                targetProfile.github_username
+                                        }
+                                    </h1>
+                                    <p class="text-gray-600">
+                                        @{targetProfile.github_username}
+                                    </p>
+                                </div>
+
+                                {
+                                    !isOwnProfile && (
+                                        <button
+                                            id="follow-btn"
+                                            data-following-id={targetProfile.id}
+                                            data-is-following={isFollowing}
+                                            class={`px-4 py-2 rounded-lg transition-colors font-medium ${
+                                                isFollowing
+                                                    ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                                    : "bg-blue-600 text-white hover:bg-blue-700"
+                                            }`}
+                                        >
+                                            {isFollowing
+                                                ? "Following"
+                                                : "Follow"}
+                                        </button>
+                                    )
+                                }
+                            </div>
+
+                            {
+                                targetProfile.bio && (
+                                    <p class="mt-3 text-gray-700">
+                                        {targetProfile.bio}
+                                    </p>
+                                )
+                            }
+
+                            <div class="mt-4 flex gap-6 text-sm">
+                                <div>
+                                    <span class="font-semibold text-gray-900"
+                                        >{targetProfile.public_repos}</span
+                                    >
+                                    <span class="text-gray-600">
+                                        repositories</span
+                                    >
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-900"
+                                        >{targetProfile.followers_count}</span
+                                    >
+                                    <span class="text-gray-600">
+                                        followers</span
+                                    >
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-900"
+                                        >{targetProfile.following_count}</span
+                                    >
+                                    <span class="text-gray-600">
+                                        following</span
+                                    >
+                                </div>
+                            </div>
+
+                            {
+                                (targetProfile.location ||
+                                    targetProfile.blog) && (
+                                    <div class="mt-4 flex gap-4 text-sm text-gray-600">
+                                        {targetProfile.location && (
+                                            <div class="flex items-center gap-1">
+                                                📍 {targetProfile.location}
+                                            </div>
+                                        )}
+                                        {targetProfile.blog && (
+                                            <a
+                                                href={targetProfile.blog}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="flex items-center gap-1 hover:text-blue-600"
+                                            >
+                                                🔗 {targetProfile.blog}
+                                            </a>
+                                        )}
+                                    </div>
+                                )
+                            }
+                        </div>
+                    </div>
+
+                    {
+                        repos.length > 0 && (
+                            <div class="mt-6 pt-6 border-t border-gray-200">
+                                <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                                    Top Repositories
+                                </h2>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {repos.map((repo) => (
+                                        <a
+                                            href={repo.html_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="p-4 border border-gray-200 rounded-lg hover:border-blue-500 transition-colors"
+                                        >
+                                            <h3 class="font-semibold text-gray-900 truncate">
+                                                {repo.name}
+                                            </h3>
+                                            {repo.description && (
+                                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">
+                                                    {repo.description}
+                                                </p>
+                                            )}
+                                            <div class="mt-3 flex items-center gap-4 text-sm text-gray-500">
+                                                {repo.language && (
+                                                    <span class="flex items-center gap-1">
+                                                        <span class="w-3 h-3 rounded-full bg-blue-500" />
+                                                        {repo.language}
+                                                    </span>
+                                                )}
+                                                <span>
+                                                    ⭐ {repo.stargazers_count}
+                                                </span>
+                                                <span>
+                                                    🔱 {repo.forks_count}
+                                                </span>
+                                            </div>
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        )
+                    }
+                </div>
+
+                <!-- Posts -->
+                <div class="space-y-6">
+                    <h2 class="text-xl font-semibold text-gray-900">Posts</h2>
+                    {
+                        postsWithMeta.length === 0 ? (
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center text-gray-600">
+                                No posts yet.
+                            </div>
+                        ) : (
+                            postsWithMeta.map((post) => (
+                                <PostCard
+                                    post={post}
+                                    currentUserId={session.user.id}
+                                />
+                            ))
+                        )
+                    }
+                </div>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div
+                    class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+                >
+                    <a
+                        href="/dashboard"
+                        class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                    >
+                        ← Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+</Layout>
+
+<script>
+    const followBtn = document.getElementById("follow-btn");
+
+    if (followBtn) {
+        followBtn.addEventListener("click", async () => {
+            const followingId = followBtn.getAttribute("data-following-id");
+            const isFollowing =
+                followBtn.getAttribute("data-is-following") === "true";
+
+            try {
+                const response = await fetch("/api/follow", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ followingId }),
+                });
+
+                const data = await response.json();
+
+                // Update button state
+                followBtn.setAttribute("data-is-following", data.isFollowing);
+                followBtn.textContent = data.isFollowing
+                    ? "Following"
+                    : "Follow";
+
+                if (data.isFollowing) {
+                    followBtn.classList.remove(
+                        "bg-blue-600",
+                        "hover:bg-blue-700",
+                    );
+                    followBtn.classList.add(
+                        "bg-gray-200",
+                        "text-gray-700",
+                        "hover:bg-gray-300",
+                    );
+                } else {
+                    followBtn.classList.remove(
+                        "bg-gray-200",
+                        "text-gray-700",
+                        "hover:bg-gray-300",
+                    );
+                    followBtn.classList.add(
+                        "bg-blue-600",
+                        "text-white",
+                        "hover:bg-blue-700",
+                    );
+                }
+            } catch (error) {
+                console.error("Follow error:", error);
+            }
+        });
+    }
+</script>

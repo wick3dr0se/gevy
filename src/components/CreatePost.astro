@@ -1,0 +1,30 @@
+---
+const { user } = Astro.props;
+---
+
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <form action="/api/posts/create" method="POST" class="space-y-4">
+        <div class="flex gap-4">
+            <img
+                src={user.avatar_url}
+                alt={user.github_username}
+                class="w-10 h-10 rounded-full flex-shrink-0"
+            />
+            <textarea
+                name="content"
+                placeholder="Share what you're working on..."
+                required
+                rows="3"
+                class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            ></textarea>
+        </div>
+        <div class="flex justify-end">
+            <button
+                type="submit"
+                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+                Post
+            </button>
+        </div>
+    </form>
+</div>
