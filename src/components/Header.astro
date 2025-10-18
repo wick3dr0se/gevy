@@ -2,13 +2,11 @@
 const { user } = Astro.props;
 ---
 
-<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+<header class="border-b border-gray-200 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <div class="flex items-center gap-8">
-                <a href="/dashboard" class="text-xl font-bold text-gray-900">
-                    Gevy
-                </a>
+                <a href="/dashboard" class="text-xl font-bold"> Gevy </a>
                 {
                     user && (
                         <nav class="hidden md:flex gap-6">
@@ -59,9 +57,41 @@ const { user } = Astro.props;
                                 Logout
                             </button>
                         </form>
+                        <button
+                            type="button"
+                            onclick="document.documentElement.classList.toggle('dark')"
+                            class="p-2 rounded"
+                            aria-label="Toggle theme"
+                        >
+                            <svg
+                                class="w-5 h-5"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path d="M12 4.5a1 1 0 0 1 1 1V7a1 1 0 1 1-2 0V5.5a1 1 0 0 1 1-1Zm0 12a1 1 0 0 1 1 1V19a1 1 0 1 1-2 0v-1.5a1 1 0 0 1 1-1Zm7.5-4.5a1 1 0 0 1 1 1H22a1 1 0 1 1 0 2h-1.5a1 1 0 1 1 0-2ZM3.5 12a1 1 0 0 1 1-1H6a1 1 0 1 1 0 2H4.5a1 1 0 0 1-1-1ZM16.95 7.05a1 1 0 0 1 1.414 0L19.071 8.76a1 1 0 1 1-1.414 1.414L16.95 8.465a1 1 0 0 1 0-1.415ZM4.929 15.243a1 1 0 0 1 1.414 0l.707.707a1 1 0 0 1-1.414 1.414l-.707-.707a1 1 0 0 1 0-1.414ZM4.93 8.465a1 1 0 1 1 1.414-1.415l.707.707A1 1 0 0 1 5.637 9.17l-.707-.707Zm11.314 7.071a1 1 0 1 1 1.415 1.415l-.707.707a1 1 0 1 1-1.415-1.415l.707-.707ZM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" />
+                            </svg>
+                        </button>
                     </div>
                 )
             }
         </div>
     </div>
 </header>
+
+<script>
+    const toggleTheme = () => {
+        const html = document.documentElement;
+        html.classList.toggle("dark");
+        localStorage.theme = html.classList.contains("dark") ? "dark" : "light";
+    };
+
+    if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches)
+    ) {
+        document.documentElement.classList.add("dark");
+    } else {
+        document.documentElement.classList.remove("dark");
+    }
+</script>
