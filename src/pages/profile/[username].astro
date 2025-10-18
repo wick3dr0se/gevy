@@ -3,7 +3,13 @@ import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import PostCard from "../../components/PostCard.astro";
 import { createServerSupabaseClient } from "../../lib/supabase";
-import { GitHubAPI, type GitHubRepo } from "../../lib/github";
+import { shouldSyncProfile, syncGitHubProfile } from "../../lib/github-sync";
+import { marked } from "marked";
+
+Astro.response.headers.set(
+    "Cache-Control",
+    "public, s-maxage=120, stale-while-revalidate=600",
+);
 
 const supabase = createServerSupabaseClient(Astro.cookies);
 const {
@@ -24,7 +30,7 @@ const { data: currentUserProfile } = await supabase
     .single();
 
 // Get target user profile
-const { data: targetProfile } = await supabase
+let { data: targetProfile } = await supabase
     .from("profiles")
     .select("*")
     .eq("github_username", username)
@@ -35,6 +41,27 @@ if (!targetProfile) {
 }
 
 const isOwnProfile = targetProfile.id === session.user.id;
+
+// Sync GitHub data if stale (hourly)
+const providerToken = session.provider_token;
+if (providerToken && shouldSyncProfile(targetProfile)) {
+    await syncGitHubProfile(targetProfile.id, providerToken);
+    const { data: refreshed } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", targetProfile.id)
+        .single();
+    if (refreshed) targetProfile = refreshed;
+}
+
+// ✅ Use cached GitHub data from the DB
+let repos = targetProfile.repos || [];
+let profileReadmeHtml = targetProfile.readme_html || null;
+
+// If there's markdown but not HTML, parse it on-demand (fallback)
+if (!profileReadmeHtml && targetProfile.readme_markdown) {
+    profileReadmeHtml = await marked.parse(targetProfile.readme_markdown);
+}
 
 // Check if following
 const { data: followData } = await supabase
@@ -59,73 +86,36 @@ const { data: posts } = await supabase
     .order("created_at", { ascending: false })
     .limit(20);
 
-// Get likes and comments count for each post
-const postsWithMeta = await Promise.all(
-    (posts || []).map(async (post) => {
-        const { count: likesCount } = await supabase
+// Bulk fetch post metadata (likes/comments/userLike)
+const postIds = posts?.map((p) => p.id) || [];
+
+const [{ data: likeCounts }, { data: userLikes }, { data: commentCounts }] =
+    await Promise.all([
+        supabase.from("post_likes").select("post_id").in("post_id", postIds),
+        supabase
             .from("post_likes")
-            .select("*", { count: "exact", head: true })
-            .eq("post_id", post.id);
+            .select("post_id")
+            .in("post_id", postIds)
+            .eq("user_id", session.user.id),
+        supabase.from("comments").select("post_id").in("post_id", postIds),
+    ]);
 
-        const { data: userLike } = await supabase
-            .from("post_likes")
-            .select("id")
-            .eq("post_id", post.id)
-            .eq("user_id", session.user.id)
-            .single();
+const likesMap = new Map();
+likeCounts?.forEach((like) => {
+    likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
+});
+const userLikedSet = new Set(userLikes?.map((l) => l.post_id) || []);
+const commentsMap = new Map();
+commentCounts?.forEach((c) => {
+    commentsMap.set(c.post_id, (commentsMap.get(c.post_id) || 0) + 1);
+});
 
-        const { count: commentsCount } = await supabase
-            .from("comments")
-            .select("*", { count: "exact", head: true })
-            .eq("post_id", post.id);
-
-        return {
-            ...post,
-            likes_count: likesCount || 0,
-            comments_count: commentsCount || 0,
-            is_liked: !!userLike,
-        };
-    }),
-);
-
-// Get GitHub repos
-const providerToken = session.provider_token;
-interface Repo {
-    name: string;
-    html_url: string;
-    description?: string;
-    language?: string;
-    stargazers_count: number;
-    forks_count: number;
-}
-
-let repos: Repo[] = [];
-
-if (providerToken) {
-    const github = new GitHubAPI(providerToken);
-    try {
-        repos = await github.getRepos(username, 6);
-    } catch (error) {
-        console.error("GitHub API error:", error);
-    }
-}
-
-import { marked } from "marked";
-
-let profileReadmeHtml: string | null = null;
-
-if (providerToken) {
-    const github = new GitHubAPI(providerToken);
-    try {
-        const readmeResponse = await github.getReadme(username);
-        const markdown = Buffer.from(readmeResponse.content, "base64").toString(
-            "utf-8",
-        );
-        profileReadmeHtml = await marked.parse(markdown);
-    } catch (error) {
-        console.error("GitHub README fetch error:", error);
-    }
-}
+const postsWithMeta = (posts || []).map((post) => ({
+    ...post,
+    likes_count: likesMap.get(post.id) || 0,
+    comments_count: commentsMap.get(post.id) || 0,
+    is_liked: userLikedSet.has(post.id),
+}));
 ---
 
 <Layout title={`${targetProfile.name || targetProfile.github_username} - Gevy`}>
@@ -257,7 +247,7 @@ if (providerToken) {
                                     Top Repositories
                                 </h2>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {repos.map((repo) => (
+                                    {repos.map((repo: any) => (
                                         <a
                                             href={repo.html_url}
                                             target="_blank"
