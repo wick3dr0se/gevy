@@ -109,6 +109,23 @@ if (providerToken) {
         console.error("GitHub API error:", error);
     }
 }
+
+import { marked } from "marked";
+
+let profileReadmeHtml: string | null = null;
+
+if (providerToken) {
+    const github = new GitHubAPI(providerToken);
+    try {
+        const readmeResponse = await github.getReadme(username);
+        const markdown = Buffer.from(readmeResponse.content, "base64").toString(
+            "utf-8",
+        );
+        profileReadmeHtml = await marked.parse(markdown);
+    } catch (error) {
+        console.error("GitHub README fetch error:", error);
+    }
+}
 ---
 
 <Layout title={`${targetProfile.name || targetProfile.github_username} - Gevy`}>
@@ -223,6 +240,15 @@ if (providerToken) {
                             }
                         </div>
                     </div>
+
+                    {
+                        profileReadmeHtml && (
+                            <div
+                                class="mx-auto max-w-4xl p-6 rounded-lg"
+                                set:html={profileReadmeHtml}
+                            />
+                        )
+                    }
 
                     {
                         repos.length > 0 && (

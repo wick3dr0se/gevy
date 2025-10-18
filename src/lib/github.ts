@@ -74,6 +74,10 @@ export class GitHubAPI {
     async getActivity(username: string, limit = 20): Promise<GitHubEvent[]> {
         return this.fetch(`/users/${username}/events/public?per_page=${limit}`);
     }
+
+    async getReadme(username: string): Promise<{ content: string }> {
+        return this.fetch(`/repos/${username}/${username}/readme`);
+    }
 }
 
 export function formatEventDescription(event: GitHubEvent): string {
