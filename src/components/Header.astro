@@ -6,7 +6,10 @@ const { user } = Astro.props;
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <div class="flex items-center gap-8">
-                <a href="/dashboard" class="text-xl font-bold"> Gevy </a>
+                <a href="/dashboard" class="flex items-center gap-2">
+                    <img src="/logo-dark.svg" alt="Gevy logo" class="w-8 h-8" />
+                    <span class="text-xl font-bold">Gevy</span>
+                </a>
                 {
                     user && (
                         <nav class="hidden md:flex gap-6">

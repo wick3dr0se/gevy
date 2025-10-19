@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- background -->
+  <rect width="64" height="64" rx="8" fill="#0f172a"/>
+  
+  <!-- orbit ring with break at top-right -->
+  <path d="M 32 10 A 22 22 0 0 1 52 24" 
+        fill="none" 
+        stroke="url(#orbitGlow)" 
+        stroke-width="3" 
+        stroke-linecap="round"/>
+  <path d="M 54 32 A 22 22 0 1 1 46 16" 
+        fill="none" 
+        stroke="rgba(230,238,248,0.15)" 
+        stroke-width="3" 
+        stroke-linecap="round"/>
+    
+  <defs>
+    <linearGradient id="orbitGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(230,238,248,0.3);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgba(230,238,248,0.05);stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- main branch line -->
+  <path d="M20 44 C28 34, 36 30, 44 20" fill="none" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- secondary branch -->
+  <path d="M20 44 C30 42, 38 44, 48 36" fill="none" stroke="rgba(249,115,22,0.6)" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- commit nodes -->
+  <circle cx="20" cy="44" r="4" fill="#f97316"/>
+  <circle cx="44" cy="20" r="4" fill="#f97316"/>
+  <circle cx="48" cy="36" r="4" fill="#f97316"/>
+
+  <!-- connecting “merge” line -->
+  <path d="M32 34 C34 28, 40 28, 44 20" fill="none" stroke="rgba(249,115,22,0.4)" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- commit nodes -->
+  <circle cx="20" cy="44" r="3" fill="#f97316"/>
+  <circle cx="44" cy="20" r="3" fill="#f97316"/>
+  <circle cx="48" cy="36" r="3" fill="#f97316"/>
+
+   <!-- meteor ribbons (flowing behind) -->
+  <path d="M 32 34 L 108 18" 
+        stroke="#60a5fa" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        fill="none"
+        opacity="0.6"/>
+  <path d="M 32 34 Q 60 22, 114 18" 
+        stroke="#3b82f6" 
+        stroke-width="2.5" 
+        stroke-linecap="round" 
+        fill="none"
+        opacity="0.8"/>
+  <path d="M 32 34 L 75 18"
+        stroke="#93c5fd" 
+        stroke-width="1.5" 
+        stroke-linecap="round" 
+        fill="none"
+        opacity="0.4"/>
+
+  <!-- meteor head (blue glow) -->
+  <circle cx="32" cy="34" r="4" fill="#3b82f6"/>
+  <circle cx="32" cy="34" r="3" fill="#60a5fa"/>
+  <circle cx="32" cy="34" r="8" fill="rgba(249,115,122,0.08)"/>
+</svg>
