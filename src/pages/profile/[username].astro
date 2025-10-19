@@ -5,6 +5,7 @@ import PostCard from "../../components/PostCard.astro";
 import { createServerSupabaseClient } from "../../lib/supabase";
 import { shouldSyncProfile, syncGitHubProfile } from "../../lib/github-sync";
 import { marked } from "marked";
+import { Image } from "astro:assets";
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -129,10 +130,13 @@ const postsWithMeta = (posts || []).map((post) => ({
           class="overflow-hidden break-word bg-white rounded-lg shadow-sm border border-gray-200 p-6"
         >
           <div class="flex flex-wrap items-start gap-6">
-            <img
+            <Image
               src={targetProfile.avatar_url}
               alt={targetProfile.github_username}
-              class="w-24 h-24 rounded-full"
+              width="192"
+              height="192"
+              class="rounded-full"
+              loading="lazy"
             />
 
             <div class="flex-1">
