@@ -5,7 +5,7 @@ import vercel from "@astrojs/vercel";
 
 export default defineConfig({
   site: "https://gevy.vercel.app",
-  output: 'server',
+  output: "server",
   adapter: vercel(),
 
   vite: {
@@ -28,5 +28,5 @@ export default defineConfig({
 
   image: {
     domains: ["avatars.githubusercontent.com"],
-  }
+  },
 });

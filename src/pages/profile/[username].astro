@@ -7,37 +7,37 @@ import { shouldSyncProfile, syncGitHubProfile } from "../../lib/github-sync";
 import { marked } from "marked";
 
 Astro.response.headers.set(
-    "Cache-Control",
-    "public, s-maxage=120, stale-while-revalidate=600",
+  "Cache-Control",
+  "public, s-maxage=120, stale-while-revalidate=600",
 );
 
 const supabase = createServerSupabaseClient(Astro.cookies);
 const {
-    data: { session },
+  data: { session },
 } = await supabase.auth.getSession();
 
 if (!session) {
-    return Astro.redirect("/");
+  return Astro.redirect("/");
 }
 
 const { username } = Astro.params as { username: string };
 
 // Get current user profile
 const { data: currentUserProfile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", session.user.id)
-    .single();
+  .from("profiles")
+  .select("*")
+  .eq("id", session.user.id)
+  .single();
 
 // Get target user profile
 let { data: targetProfile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("github_username", username)
-    .single();
+  .from("profiles")
+  .select("*")
+  .eq("github_username", username)
+  .single();
 
 if (!targetProfile) {
-    return Astro.redirect("/dashboard");
+  return Astro.redirect("/dashboard");
 }
 
 const isOwnProfile = targetProfile.id === session.user.id;
@@ -45,13 +45,13 @@ const isOwnProfile = targetProfile.id === session.user.id;
 // Sync GitHub data if stale (hourly)
 const providerToken = session.provider_token;
 if (providerToken && shouldSyncProfile(targetProfile)) {
-    await syncGitHubProfile(targetProfile.id, providerToken, supabase);
-    const { data: refreshed } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", targetProfile.id)
-        .single();
-    if (refreshed) targetProfile = refreshed;
+  await syncGitHubProfile(targetProfile.id, providerToken, supabase);
+  const { data: refreshed } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", targetProfile.id)
+    .single();
+  if (refreshed) targetProfile = refreshed;
 }
 
 // Use cached GitHub data from the DB
@@ -60,359 +60,326 @@ let profileReadmeHtml = targetProfile.readme_html || null;
 
 // If there's markdown but not HTML, parse it on-demand (fallback)
 if (!profileReadmeHtml && targetProfile.readme_markdown) {
-    profileReadmeHtml = await marked.parse(targetProfile.readme_markdown);
+  profileReadmeHtml = await marked.parse(targetProfile.readme_markdown);
 }
 
 // Check if following
 const { data: followData } = await supabase
-    .from("follows")
-    .select("id")
-    .eq("follower_id", session.user.id)
-    .eq("following_id", targetProfile.id)
-    .single();
+  .from("follows")
+  .select("id")
+  .eq("follower_id", session.user.id)
+  .eq("following_id", targetProfile.id)
+  .single();
 
 const isFollowing = !!followData;
 
 // Get user's posts
 const { data: posts } = await supabase
-    .from("posts")
-    .select(
-        `
+  .from("posts")
+  .select(
+    `
     *,
     profiles (*)
   `,
-    )
-    .eq("author_id", targetProfile.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  )
+  .eq("author_id", targetProfile.id)
+  .order("created_at", { ascending: false })
+  .limit(20);
 
 // Bulk fetch post metadata (likes/comments/userLike)
 const postIds = posts?.map((p) => p.id) || [];
 
 const [{ data: likeCounts }, { data: userLikes }, { data: commentCounts }] =
-    await Promise.all([
-        supabase.from("post_likes").select("post_id").in("post_id", postIds),
-        supabase
-            .from("post_likes")
-            .select("post_id")
-            .in("post_id", postIds)
-            .eq("user_id", session.user.id),
-        supabase.from("comments").select("post_id").in("post_id", postIds),
-    ]);
+  await Promise.all([
+    supabase.from("post_likes").select("post_id").in("post_id", postIds),
+    supabase
+      .from("post_likes")
+      .select("post_id")
+      .in("post_id", postIds)
+      .eq("user_id", session.user.id),
+    supabase.from("comments").select("post_id").in("post_id", postIds),
+  ]);
 
 const likesMap = new Map();
 likeCounts?.forEach((like) => {
-    likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
+  likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
 });
 const userLikedSet = new Set(userLikes?.map((l) => l.post_id) || []);
 const commentsMap = new Map();
 commentCounts?.forEach((c) => {
-    commentsMap.set(c.post_id, (commentsMap.get(c.post_id) || 0) + 1);
+  commentsMap.set(c.post_id, (commentsMap.get(c.post_id) || 0) + 1);
 });
 
 const postsWithMeta = (posts || []).map((post) => ({
-    ...post,
-    likes_count: likesMap.get(post.id) || 0,
-    comments_count: commentsMap.get(post.id) || 0,
-    is_liked: userLikedSet.has(post.id),
+  ...post,
+  likes_count: likesMap.get(post.id) || 0,
+  comments_count: commentsMap.get(post.id) || 0,
+  is_liked: userLikedSet.has(post.id),
 }));
 ---
 
 <Layout title={`${targetProfile.name || targetProfile.github_username} - Gevy`}>
-    <Header user={currentUserProfile} />
+  <Header user={currentUserProfile} />
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-8">
-                <!-- Profile Card -->
-                <div
-                    class="overflow-hidden break-word bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-                >
-                    <div class="flex flex-wrap items-start gap-6">
-                        <img
-                            src={targetProfile.avatar_url}
-                            alt={targetProfile.github_username}
-                            class="w-24 h-24 rounded-full"
-                        />
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-8">
+        <!-- Profile Card -->
+        <div
+          class="overflow-hidden break-word bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+        >
+          <div class="flex flex-wrap items-start gap-6">
+            <img
+              src={targetProfile.avatar_url}
+              alt={targetProfile.github_username}
+              class="w-24 h-24 rounded-full"
+            />
 
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h1
-                                        class="text-2xl font-bold text-gray-900"
-                                    >
-                                        {
-                                            targetProfile.name ||
-                                                targetProfile.github_username
-                                        }
-                                    </h1>
-                                    <p class="text-gray-600">
-                                        @{targetProfile.github_username}
-                                    </p>
-                                </div>
-
-                                {
-                                    !isOwnProfile && (
-                                        <button
-                                            id="follow-btn"
-                                            data-following-id={targetProfile.id}
-                                            data-is-following={isFollowing}
-                                            class={`px-4 py-2 rounded-lg transition-colors font-medium ${
-                                                isFollowing
-                                                    ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                                                    : "bg-blue-600 text-white hover:bg-blue-700"
-                                            }`}
-                                        >
-                                            {isFollowing
-                                                ? "Following"
-                                                : "Follow"}
-                                        </button>
-                                    )
-                                }
-                            </div>
-
-                            {
-                                targetProfile.bio && (
-                                    <p class="mt-3 text-gray-700">
-                                        {targetProfile.bio}
-                                    </p>
-                                )
-                            }
-
-                            <div class="mt-4 flex flex-wrap gap-6 text-sm">
-                                <div>
-                                    <span class="font-semibold text-gray-900"
-                                        >{targetProfile.public_repos}</span
-                                    >
-                                    <span class="text-gray-600">
-                                        repositories</span
-                                    >
-                                </div>
-                                <div>
-                                    <span class="font-semibold text-gray-900"
-                                        >{targetProfile.followers_count}</span
-                                    >
-                                    <span class="text-gray-600">
-                                        followers</span
-                                    >
-                                </div>
-                                <div>
-                                    <span class="font-semibold text-gray-900"
-                                        >{targetProfile.following_count}</span
-                                    >
-                                    <span class="text-gray-600">
-                                        following</span
-                                    >
-                                </div>
-                            </div>
-
-                            {
-                                (targetProfile.location ||
-                                    targetProfile.blog) && (
-                                    <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
-                                        {targetProfile.location && (
-                                            <div class="relative inline-block">
-                                                📍
-                                                <span
-                                                    id="location-trigger"
-                                                    class="underline"
-                                                >
-                                                    {targetProfile.location}
-                                                </span>
-                                                <div
-                                                    id="location-popover"
-                                                    class="absolute left-0 mt-2 w-80 p-2 bg-white border border-gray-300 rounded shadow-lg hidden z-10"
-                                                >
-                                                    <iframe
-                                                        src={`https://www.google.com/maps?q=${encodeURIComponent(targetProfile.location)}&output=embed`}
-                                                        class="w-full h-60"
-                                                        loading="lazy"
-                                                        allowfullscreen
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-                                        {targetProfile.blog && (
-                                            <span class="flex items-center gap-1">
-                                                🔗
-                                                <a
-                                                    href={targetProfile.blog}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    class="underline"
-                                                >
-                                                    {targetProfile.blog}
-                                                </a>
-                                            </span>
-                                        )}
-                                    </div>
-                                )
-                            }
-                        </div>
-                    </div>
-
-                    {
-                        profileReadmeHtml && (
-                            <div
-                                class="mx-auto max-w-4xl p-6 rounded-lg"
-                                set:html={profileReadmeHtml}
-                            />
-                        )
-                    }
-
-                    {
-                        repos.length > 0 && (
-                            <div class="mt-6 pt-6 border-t">
-                                <h2 class="text-lg font-semibold text-gray-900 mb-4">
-                                    Top Repositories
-                                </h2>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {repos.map((repo: any) => (
-                                        <a
-                                            href={repo.html_url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            class="p-4 border rounded-lg hover:border-blue-500 transition-colors"
-                                        >
-                                            <h3 class="font-semibold text-gray-900 truncate">
-                                                {repo.name}
-                                            </h3>
-                                            {repo.description && (
-                                                <p class="text-sm text-gray-600 mt-1 line-clamp-2">
-                                                    {repo.description}
-                                                </p>
-                                            )}
-                                            <div class="mt-3 flex items-center gap-4 text-sm text-gray-500">
-                                                {repo.language && (
-                                                    <span class="flex items-center gap-1">
-                                                        <span class="w-3 h-3 rounded-full bg-blue-500" />
-                                                        {repo.language}
-                                                    </span>
-                                                )}
-                                                <span>
-                                                    ⭐ {repo.stargazers_count}
-                                                </span>
-                                                <span>
-                                                    🔱 {repo.forks_count}
-                                                </span>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            </div>
-                        )
-                    }
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h1 class="text-2xl font-bold text-gray-900">
+                    {targetProfile.name || targetProfile.github_username}
+                  </h1>
+                  <p class="text-gray-600">
+                    @{targetProfile.github_username}
+                  </p>
                 </div>
 
-                <!-- Posts -->
-                <div class="space-y-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Posts</h2>
-                    {
-                        postsWithMeta.length === 0 ? (
-                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center text-gray-600">
-                                No posts yet.
-                            </div>
-                        ) : (
-                            postsWithMeta.map((post) => (
-                                <PostCard
-                                    post={post}
-                                    currentUserId={session.user.id}
-                                />
-                            ))
-                        )
-                    }
-                </div>
-            </div>
-
-            <div class="lg:col-span-1">
-                <div
-                    class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-                >
-                    <a
-                        href="/dashboard"
-                        class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                {
+                  !isOwnProfile && (
+                    <button
+                      id="follow-btn"
+                      data-following-id={targetProfile.id}
+                      data-is-following={isFollowing}
+                      class={`px-4 py-2 rounded-lg transition-colors font-medium ${
+                        isFollowing
+                          ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                          : "bg-blue-600 text-white hover:bg-blue-700"
+                      }`}
                     >
-                        ← Back to Dashboard
-                    </a>
+                      {isFollowing ? "Following" : "Follow"}
+                    </button>
+                  )
+                }
+              </div>
+
+              {
+                targetProfile.bio && (
+                  <p class="mt-3 text-gray-700">{targetProfile.bio}</p>
+                )
+              }
+
+              <div class="mt-4 flex flex-wrap gap-6 text-sm">
+                <div>
+                  <span class="font-semibold text-gray-900"
+                    >{targetProfile.public_repos}</span
+                  >
+                  <span class="text-gray-600"> repositories</span>
                 </div>
+                <div>
+                  <span class="font-semibold text-gray-900"
+                    >{targetProfile.followers_count}</span
+                  >
+                  <span class="text-gray-600"> followers</span>
+                </div>
+                <div>
+                  <span class="font-semibold text-gray-900"
+                    >{targetProfile.following_count}</span
+                  >
+                  <span class="text-gray-600"> following</span>
+                </div>
+              </div>
+
+              {
+                (targetProfile.location || targetProfile.blog) && (
+                  <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
+                    {targetProfile.location && (
+                      <div class="relative inline-block">
+                        📍
+                        <span id="location-trigger" class="underline">
+                          {targetProfile.location}
+                        </span>
+                        <div
+                          id="location-popover"
+                          class="absolute left-0 mt-2 w-80 p-2 bg-white border border-gray-300 rounded shadow-lg hidden z-10"
+                        >
+                          <iframe
+                            src={`https://www.google.com/maps?q=${encodeURIComponent(targetProfile.location)}&output=embed`}
+                            class="w-full h-60"
+                            loading="lazy"
+                            allowfullscreen
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {targetProfile.blog && (
+                      <span class="flex items-center gap-1">
+                        🔗
+                        <a
+                          href={targetProfile.blog}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="underline"
+                        >
+                          {targetProfile.blog}
+                        </a>
+                      </span>
+                    )}
+                  </div>
+                )
+              }
             </div>
+          </div>
+
+          {
+            profileReadmeHtml && (
+              <div
+                class="mx-auto max-w-4xl p-6 rounded-lg"
+                set:html={profileReadmeHtml}
+              />
+            )
+          }
+
+          {
+            repos.length > 0 && (
+              <div class="mt-6 pt-6 border-t">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                  Top Repositories
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {repos.map((repo: any) => (
+                    <a
+                      href={repo.html_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="p-4 border rounded-lg hover:border-blue-500 transition-colors"
+                    >
+                      <h3 class="font-semibold text-gray-900 truncate">
+                        {repo.name}
+                      </h3>
+                      {repo.description && (
+                        <p class="text-sm text-gray-600 mt-1 line-clamp-2">
+                          {repo.description}
+                        </p>
+                      )}
+                      <div class="mt-3 flex items-center gap-4 text-sm text-gray-500">
+                        {repo.language && (
+                          <span class="flex items-center gap-1">
+                            <span class="w-3 h-3 rounded-full bg-blue-500" />
+                            {repo.language}
+                          </span>
+                        )}
+                        <span>⭐ {repo.stargazers_count}</span>
+                        <span>🔱 {repo.forks_count}</span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )
+          }
         </div>
-    </main>
+
+        <!-- Posts -->
+        <div class="space-y-6">
+          <h2 class="text-xl font-semibold text-gray-900">Posts</h2>
+          {
+            postsWithMeta.length === 0 ? (
+              <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center text-gray-600">
+                No posts yet.
+              </div>
+            ) : (
+              postsWithMeta.map((post) => (
+                <PostCard post={post} currentUserId={session.user.id} />
+              ))
+            )
+          }
+        </div>
+      </div>
+
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <a
+            href="/dashboard"
+            class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            ← Back to Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
 </Layout>
 
 <script>
-    const followBtn = document.getElementById("follow-btn");
+  const followBtn = document.getElementById("follow-btn");
 
-    if (followBtn) {
-        followBtn.addEventListener("click", async () => {
-            const followingId = followBtn.getAttribute("data-following-id");
-            const isFollowing =
-                followBtn.getAttribute("data-is-following") === "true";
+  if (followBtn) {
+    followBtn.addEventListener("click", async () => {
+      const followingId = followBtn.getAttribute("data-following-id");
+      const isFollowing =
+        followBtn.getAttribute("data-is-following") === "true";
 
-            try {
-                const response = await fetch("/api/follow", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ followingId }),
-                });
-
-                const data = await response.json();
-
-                // Update button state
-                followBtn.setAttribute("data-is-following", data.isFollowing);
-                followBtn.textContent = data.isFollowing
-                    ? "Following"
-                    : "Follow";
-
-                if (data.isFollowing) {
-                    followBtn.classList.remove(
-                        "bg-blue-600",
-                        "hover:bg-blue-700",
-                    );
-                    followBtn.classList.add(
-                        "bg-gray-200",
-                        "text-gray-700",
-                        "hover:bg-gray-300",
-                    );
-                } else {
-                    followBtn.classList.remove(
-                        "bg-gray-200",
-                        "text-gray-700",
-                        "hover:bg-gray-300",
-                    );
-                    followBtn.classList.add(
-                        "bg-blue-600",
-                        "text-white",
-                        "hover:bg-blue-700",
-                    );
-                }
-            } catch (error) {
-                console.error("Follow error:", error);
-            }
+      try {
+        const response = await fetch("/api/follow", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ followingId }),
         });
-    }
 
-    const locTrigger = document.getElementById("location-trigger");
-    const locPopover = document.getElementById("location-popover");
+        const data = await response.json();
 
-    if (locTrigger && locPopover) {
-        let popoverTimeout: ReturnType<typeof setTimeout>;
+        // Update button state
+        followBtn.setAttribute("data-is-following", data.isFollowing);
+        followBtn.textContent = data.isFollowing ? "Following" : "Follow";
 
-        const showPopover = () => {
-            clearTimeout(popoverTimeout);
-            locPopover.classList.remove("hidden");
-        };
+        if (data.isFollowing) {
+          followBtn.classList.remove("bg-blue-600", "hover:bg-blue-700");
+          followBtn.classList.add(
+            "bg-gray-200",
+            "text-gray-700",
+            "hover:bg-gray-300",
+          );
+        } else {
+          followBtn.classList.remove(
+            "bg-gray-200",
+            "text-gray-700",
+            "hover:bg-gray-300",
+          );
+          followBtn.classList.add(
+            "bg-blue-600",
+            "text-white",
+            "hover:bg-blue-700",
+          );
+        }
+      } catch (error) {
+        console.error("Follow error:", error);
+      }
+    });
+  }
 
-        const hidePopover = () => {
-            popoverTimeout = setTimeout(
-                () => locPopover.classList.add("hidden"),
-                150,
-            );
-        };
+  const locTrigger = document.getElementById("location-trigger");
+  const locPopover = document.getElementById("location-popover");
 
-        locTrigger.addEventListener("mouseenter", showPopover);
-        locTrigger.addEventListener("mouseleave", hidePopover);
-        locPopover.addEventListener("mouseenter", showPopover);
-        locPopover.addEventListener("mouseleave", hidePopover);
-    }
+  if (locTrigger && locPopover) {
+    let popoverTimeout: ReturnType<typeof setTimeout>;
+
+    const showPopover = () => {
+      clearTimeout(popoverTimeout);
+      locPopover.classList.remove("hidden");
+    };
+
+    const hidePopover = () => {
+      popoverTimeout = setTimeout(
+        () => locPopover.classList.add("hidden"),
+        150,
+      );
+    };
+
+    locTrigger.addEventListener("mouseenter", showPopover);
+    locTrigger.addEventListener("mouseleave", hidePopover);
+    locPopover.addEventListener("mouseenter", showPopover);
+    locPopover.addEventListener("mouseleave", hidePopover);
+  }
 </script>

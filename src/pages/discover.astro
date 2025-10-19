@@ -5,156 +5,144 @@ import { createServerSupabaseClient } from "../lib/supabase";
 
 const supabase = createServerSupabaseClient(Astro.cookies);
 const {
-    data: { session },
+  data: { session },
 } = await supabase.auth.getSession();
 
 if (!session) {
-    return Astro.redirect("/");
+  return Astro.redirect("/");
 }
 
 const { data: currentUserProfile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", session.user.id)
-    .single();
+  .from("profiles")
+  .select("*")
+  .eq("id", session.user.id)
+  .single();
 
 // Get all profiles except current user
 const { data: profiles } = await supabase
-    .from("profiles")
-    .select("*")
-    .neq("id", session.user.id)
-    .order("created_at", { ascending: false })
-    .limit(50);
+  .from("profiles")
+  .select("*")
+  .neq("id", session.user.id)
+  .order("created_at", { ascending: false })
+  .limit(50);
 
 // Check which users the current user is following
 const { data: following } = await supabase
-    .from("follows")
-    .select("following_id")
-    .eq("follower_id", session.user.id);
+  .from("follows")
+  .select("following_id")
+  .eq("follower_id", session.user.id);
 
 const followingIds = new Set(following?.map((f) => f.following_id) || []);
 ---
 
 <Layout title="Discover - Gevy">
-    <Header user={currentUserProfile} />
+  <Header user={currentUserProfile} />
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">
-            Discover Developers
-        </h1>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">Discover Developers</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {
-                profiles?.map((profile) => (
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <div class="flex items-start gap-4">
-                            <img
-                                src={profile.avatar_url}
-                                alt={profile.github_username}
-                                class="w-16 h-16 rounded-full"
-                            />
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {
+        profiles?.map((profile) => (
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-start gap-4">
+              <img
+                src={profile.avatar_url}
+                alt={profile.github_username}
+                class="w-16 h-16 rounded-full"
+              />
 
-                            <div class="flex-1 min-w-0">
-                                <a
-                                    href={`/profile/${profile.github_username}`}
-                                    class="font-semibold text-gray-900 hover:underline block truncate"
-                                >
-                                    {profile.name || profile.github_username}
-                                </a>
-                                <p class="text-sm text-gray-600 truncate">
-                                    @{profile.github_username}
-                                </p>
+              <div class="flex-1 min-w-0">
+                <a
+                  href={`/profile/${profile.github_username}`}
+                  class="font-semibold text-gray-900 hover:underline block truncate"
+                >
+                  {profile.name || profile.github_username}
+                </a>
+                <p class="text-sm text-gray-600 truncate">
+                  @{profile.github_username}
+                </p>
 
-                                {profile.bio && (
-                                    <p class="text-sm text-gray-700 mt-2 line-clamp-2">
-                                        {profile.bio}
-                                    </p>
-                                )}
+                {profile.bio && (
+                  <p class="text-sm text-gray-700 mt-2 line-clamp-2">
+                    {profile.bio}
+                  </p>
+                )}
 
-                                <div class="mt-3 flex gap-4 text-xs text-gray-500">
-                                    <span>{profile.public_repos} repos</span>
-                                    <span>
-                                        {profile.followers_count} followers
-                                    </span>
-                                </div>
+                <div class="mt-3 flex gap-4 text-xs text-gray-500">
+                  <span>{profile.public_repos} repos</span>
+                  <span>{profile.followers_count} followers</span>
+                </div>
 
-                                <button
-                                    class="follow-btn mt-4 w-full px-4 py-2 rounded-lg transition-colors font-medium text-sm"
-                                    data-following-id={profile.id}
-                                    data-is-following={followingIds.has(
-                                        profile.id,
-                                    )}
-                                >
-                                    {followingIds.has(profile.id)
-                                        ? "Following"
-                                        : "Follow"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))
-            }
-        </div>
-    </main>
+                <button
+                  class="follow-btn mt-4 w-full px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                  data-following-id={profile.id}
+                  data-is-following={followingIds.has(profile.id)}
+                >
+                  {followingIds.has(profile.id) ? "Following" : "Follow"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </main>
 </Layout>
 
 <script>
-    document.querySelectorAll(".follow-btn").forEach((btn) => {
-        const isFollowing = btn.getAttribute("data-is-following") === "true";
+  document.querySelectorAll(".follow-btn").forEach((btn) => {
+    const isFollowing = btn.getAttribute("data-is-following") === "true";
 
-        // Set initial styles
-        if (isFollowing) {
-            btn.classList.add(
-                "bg-gray-200",
-                "text-gray-700",
-                "hover:bg-gray-300",
-            );
-        } else {
-            btn.classList.add("bg-blue-600", "text-white", "hover:bg-blue-700");
-        }
+    // Set initial styles
+    if (isFollowing) {
+      btn.classList.add("bg-gray-200", "text-gray-700", "hover:bg-gray-300");
+    } else {
+      btn.classList.add("bg-blue-600", "text-white", "hover:bg-blue-700");
+    }
 
-        btn.addEventListener("click", async (e) => {
-            const target = e.target as HTMLButtonElement;
-            const followingId = target.getAttribute("data-following-id");
+    btn.addEventListener("click", async (e) => {
+      const target = e.target as HTMLButtonElement;
+      const followingId = target.getAttribute("data-following-id");
 
-            try {
-                const response = await fetch("/api/follow", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ followingId }),
-                });
-
-                const data = await response.json();
-
-                target.setAttribute("data-is-following", data.isFollowing);
-                target.textContent = data.isFollowing ? "Following" : "Follow";
-
-                if (data.isFollowing) {
-                    target.classList.remove(
-                        "bg-blue-600",
-                        "text-white",
-                        "hover:bg-blue-700",
-                    );
-                    target.classList.add(
-                        "bg-gray-200",
-                        "text-gray-700",
-                        "hover:bg-gray-300",
-                    );
-                } else {
-                    target.classList.remove(
-                        "bg-gray-200",
-                        "text-gray-700",
-                        "hover:bg-gray-300",
-                    );
-                    target.classList.add(
-                        "bg-blue-600",
-                        "text-white",
-                        "hover:bg-blue-700",
-                    );
-                }
-            } catch (error) {
-                console.error("Follow error:", error);
-            }
+      try {
+        const response = await fetch("/api/follow", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ followingId }),
         });
+
+        const data = await response.json();
+
+        target.setAttribute("data-is-following", data.isFollowing);
+        target.textContent = data.isFollowing ? "Following" : "Follow";
+
+        if (data.isFollowing) {
+          target.classList.remove(
+            "bg-blue-600",
+            "text-white",
+            "hover:bg-blue-700",
+          );
+          target.classList.add(
+            "bg-gray-200",
+            "text-gray-700",
+            "hover:bg-gray-300",
+          );
+        } else {
+          target.classList.remove(
+            "bg-gray-200",
+            "text-gray-700",
+            "hover:bg-gray-300",
+          );
+          target.classList.add(
+            "bg-blue-600",
+            "text-white",
+            "hover:bg-blue-700",
+          );
+        }
+      } catch (error) {
+        console.error("Follow error:", error);
+      }
     });
+  });
 </script>

@@ -2,78 +2,78 @@
 const { post, currentUserId } = Astro.props;
 
 function getTimeAgo(date: string): string {
-    const seconds = Math.floor(
-        (new Date().getTime() - new Date(date).getTime()) / 1000,
-    );
+  const seconds = Math.floor(
+    (new Date().getTime() - new Date(date).getTime()) / 1000,
+  );
 
-    const intervals = {
-        year: 31536000,
-        month: 2592000,
-        week: 604800,
-        day: 86400,
-        hour: 3600,
-        minute: 60,
-    };
+  const intervals = {
+    year: 31536000,
+    month: 2592000,
+    week: 604800,
+    day: 86400,
+    hour: 3600,
+    minute: 60,
+  };
 
-    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
-        const interval = Math.floor(seconds / secondsInUnit);
-        if (interval >= 1) {
-            return `${interval} ${unit}${interval > 1 ? "s" : ""} ago`;
-        }
+  for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+    const interval = Math.floor(seconds / secondsInUnit);
+    if (interval >= 1) {
+      return `${interval} ${unit}${interval > 1 ? "s" : ""} ago`;
     }
+  }
 
-    return "just now";
+  return "just now";
 }
 ---
 
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-    <div class="flex gap-4">
-        <a href={`/profile/${post.profiles.github_username}`}>
-            <img
-                src={post.profiles.avatar_url}
-                alt={post.profiles.github_username}
-                class="w-12 h-12 rounded-full flex-shrink-0"
-            />
+  <div class="flex gap-4">
+    <a href={`/profile/${post.profiles.github_username}`}>
+      <img
+        src={post.profiles.avatar_url}
+        alt={post.profiles.github_username}
+        class="w-12 h-12 rounded-full flex-shrink-0"
+      />
+    </a>
+
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2">
+        <a
+          href={`/profile/${post.profiles.github_username}`}
+          class="font-semibold text-gray-900 hover:underline"
+        >
+          {post.profiles.name || post.profiles.github_username}
         </a>
+        <span class="text-gray-500">·</span>
+        <span class="text-sm text-gray-500">
+          {getTimeAgo(post.created_at)}
+        </span>
+      </div>
 
-        <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-                <a
-                    href={`/profile/${post.profiles.github_username}`}
-                    class="font-semibold text-gray-900 hover:underline"
-                >
-                    {post.profiles.name || post.profiles.github_username}
-                </a>
-                <span class="text-gray-500">·</span>
-                <span class="text-sm text-gray-500">
-                    {getTimeAgo(post.created_at)}
-                </span>
-            </div>
+      <p class="mt-2 text-gray-800 whitespace-pre-wrap">{post.content}</p>
 
-            <p class="mt-2 text-gray-800 whitespace-pre-wrap">{post.content}</p>
+      <div class="mt-4 flex items-center gap-6">
+        <form action="/api/posts/like" method="POST" class="inline">
+          <input type="hidden" name="postId" value={post.id} />
+          <button
+            type="submit"
+            class="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors"
+          >
+            <span class={post.is_liked ? "text-red-600" : ""}>
+              {post.is_liked ? "❤️" : "🤍"}
+            </span>
+            <span class="text-sm">{post.likes_count || 0}</span>
+          </button>
+        </form>
 
-            <div class="mt-4 flex items-center gap-6">
-                <form action="/api/posts/like" method="POST" class="inline">
-                    <input type="hidden" name="postId" value={post.id} />
-                    <button
-                        type="submit"
-                        class="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors"
-                    >
-                        <span class={post.is_liked ? "text-red-600" : ""}>
-                            {post.is_liked ? "❤️" : "🤍"}
-                        </span>
-                        <span class="text-sm">{post.likes_count || 0}</span>
-                    </button>
-                </form>
-
-                <a
-                    href={`/post/${post.id}`}
-                    class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
-                >
-                    <span>💬</span>
-                    <span class="text-sm">{post.comments_count || 0}</span>
-                </a>
-            </div>
-        </div>
+        <a
+          href={`/post/${post.id}`}
+          class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
+        >
+          <span>💬</span>
+          <span class="text-sm">{post.comments_count || 0}</span>
+        </a>
+      </div>
     </div>
+  </div>
 </div>
