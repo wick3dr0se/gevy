@@ -1,46 +1,60 @@
-# Astro Starter Kit: Basics
+# Gevy
 
-```sh
-npm create astro@latest -- --template basics
-```
+**Gevy** is an open-source social platform for developers, powered by **Astro**, **TailwindCSS**, **Supabase**, and deployed on **Vercel**
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Stack Used
 
-## 🚀 Project Structure
+- **[Astro](https://astro.build/)** — Fast, modern frontend framework
+- **[TailwindCSS](https://tailwindcss.com/)** — Utility-first styling
+- **[Supabase](https://supabase.com/)** — Auth, DB, and real-time backend
+- **[Vercel](https://vercel.com/)** — Fast global deployments
 
-Inside of your Astro project, you'll see the following folders and files:
+## Project Structure
 
 ```text
 /
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
+├── public/              # Static assets (favicon, logos, etc.)
+├── src/
+│   ├── components/      # Reusable UI components
+│   ├── layouts/         # Shared page layouts
+│   ├── pages/           # Astro routes
+│   ├── lib/             # Supabase + GitHub API + helpers
 └── package.json
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Getting Started (Self Hosting)
 
-## 🧞 Commands
+1. Clone & install
 
-All commands are run from the root of the project, from a terminal:
+```bash
+git clone https://github.com/wick3dr0se/gevy
+cd gevy
+npm install
+```
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+2. Setup Supabase
+   Create a new [Supabase](https://supabase.com/) project, then copy your credentials into .env, like:
 
-## 👀 Want to learn more?
+```bash
+SUPABASE_URL=...
+SUPABASE_ANON_KEY=...
+```
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+(You'll find these in Project Settings → API)
+
+3. Run locally
+
+```bash
+npm run dev
+```
+
+Then visit http://localhost:8080
+
+## Contributing
+
+Issues, PRs, feedback are all welcome.. All help is much appreciated. Only preferences:
+
+- Format the code (Prettier)
+- Follow conventional commits (chore:, feat:, fix:)
+
+Maintained with ❤️ by [Open Source Force](https://github.com/opensource-force/)
