@@ -62,7 +62,6 @@ const { user } = Astro.props;
                         </form>
                         <button
                             type="button"
-                            onclick="document.documentElement.classList.toggle('dark')"
                             class="p-2 rounded"
                             aria-label="Toggle theme"
                         >
@@ -82,19 +81,32 @@ const { user } = Astro.props;
 </header>
 
 <script>
-    const toggleTheme = () => {
+    window.addEventListener("DOMContentLoaded", () => {
         const html = document.documentElement;
-        html.classList.toggle("dark");
-        localStorage.theme = html.classList.contains("dark") ? "dark" : "light";
-    };
 
-    if (
-        localStorage.theme === "dark" ||
-        (!("theme" in localStorage) &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches)
-    ) {
-        document.documentElement.classList.add("dark");
-    } else {
-        document.documentElement.classList.remove("dark");
-    }
+        // Apply theme on page load
+        const savedTheme = localStorage.getItem("theme");
+        if (
+            savedTheme === "dark" ||
+            (!savedTheme &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+            html.classList.add("dark");
+        } else {
+            html.classList.remove("dark");
+        }
+
+        const toggleButton = document.querySelector(
+            '[aria-label="Toggle theme"]',
+        );
+        if (toggleButton) {
+            toggleButton.addEventListener("click", () => {
+                html.classList.toggle("dark");
+                localStorage.setItem(
+                    "theme",
+                    html.classList.contains("dark") ? "dark" : "light",
+                );
+            });
+        }
+    });
 </script>
