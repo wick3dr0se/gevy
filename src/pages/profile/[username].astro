@@ -211,19 +211,39 @@ const postsWithMeta = (posts || []).map((post) => ({
                                     targetProfile.blog) && (
                                     <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
                                         {targetProfile.location && (
-                                            <div class="flex items-center gap-1">
-                                                📍 {targetProfile.location}
+                                            <div class="relative inline-block">
+                                                📍
+                                                <span
+                                                    id="location-trigger"
+                                                    class="underline"
+                                                >
+                                                    {targetProfile.location}
+                                                </span>
+                                                <div
+                                                    id="location-popover"
+                                                    class="absolute left-0 mt-2 w-80 p-2 bg-white border border-gray-300 rounded shadow-lg hidden z-10"
+                                                >
+                                                    <iframe
+                                                        src={`https://www.google.com/maps?q=${encodeURIComponent(targetProfile.location)}&output=embed`}
+                                                        class="w-full h-60"
+                                                        loading="lazy"
+                                                        allowfullscreen
+                                                    />
+                                                </div>
                                             </div>
                                         )}
                                         {targetProfile.blog && (
-                                            <a
-                                                href={targetProfile.blog}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                class="flex items-center gap-1 hover:text-blue-600"
-                                            >
-                                                🔗 {targetProfile.blog}
-                                            </a>
+                                            <span class="flex items-center gap-1">
+                                                🔗
+                                                <a
+                                                    href={targetProfile.blog}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="underline"
+                                                >
+                                                    {targetProfile.blog}
+                                                </a>
+                                            </span>
                                         )}
                                     </div>
                                 )
@@ -370,5 +390,29 @@ const postsWithMeta = (posts || []).map((post) => ({
                 console.error("Follow error:", error);
             }
         });
+    }
+
+    const locTrigger = document.getElementById("location-trigger");
+    const locPopover = document.getElementById("location-popover");
+
+    if (locTrigger && locPopover) {
+        let popoverTimeout: ReturnType<typeof setTimeout>;
+
+        const showPopover = () => {
+            clearTimeout(popoverTimeout);
+            locPopover.classList.remove("hidden");
+        };
+
+        const hidePopover = () => {
+            popoverTimeout = setTimeout(
+                () => locPopover.classList.add("hidden"),
+                150,
+            );
+        };
+
+        locTrigger.addEventListener("mouseenter", showPopover);
+        locTrigger.addEventListener("mouseleave", hidePopover);
+        locPopover.addEventListener("mouseenter", showPopover);
+        locPopover.addEventListener("mouseleave", hidePopover);
     }
 </script>
