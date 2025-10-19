@@ -126,9 +126,9 @@ const postsWithMeta = (posts || []).map((post) => ({
             <div class="lg:col-span-2 space-y-8">
                 <!-- Profile Card -->
                 <div
-                    class="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+                    class="overflow-hidden break-word bg-white rounded-lg shadow-sm border border-gray-200 p-6"
                 >
-                    <div class="flex items-start gap-6">
+                    <div class="flex flex-wrap items-start gap-6">
                         <img
                             src={targetProfile.avatar_url}
                             alt={targetProfile.github_username}
@@ -179,7 +179,7 @@ const postsWithMeta = (posts || []).map((post) => ({
                                 )
                             }
 
-                            <div class="mt-4 flex gap-6 text-sm">
+                            <div class="mt-4 flex flex-wrap gap-6 text-sm">
                                 <div>
                                     <span class="font-semibold text-gray-900"
                                         >{targetProfile.public_repos}</span
@@ -209,7 +209,7 @@ const postsWithMeta = (posts || []).map((post) => ({
                             {
                                 (targetProfile.location ||
                                     targetProfile.blog) && (
-                                    <div class="mt-4 flex gap-4 text-sm text-gray-600">
+                                    <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
                                         {targetProfile.location && (
                                             <div class="flex items-center gap-1">
                                                 📍 {targetProfile.location}
