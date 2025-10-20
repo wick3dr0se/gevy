@@ -16,6 +16,16 @@ const { title } = Astro.props;
   </head>
   <body class="min-h-screen">
     <slot />
+    <footer
+      class="border-t border-gray-200 py-6 mt-12 text-center text-sm text-gray-500"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2"
+      >
+        <p>© {new Date().getFullYear()} Gevy</p>
+        <a href="/privacy" class="hover:text-gray-900">Privacy</a>
+      </div>
+    </footer>
   </body>
 </html>
 
@@ -31,11 +41,13 @@ const { title } = Astro.props;
     --bg: #232329;
     --text: #fff;
   }
+
   body,
   div {
     background-color: var(--bg);
     border-color: var(--border);
   }
+
   * {
     color: var(--text);
   }
