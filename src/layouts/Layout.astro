@@ -52,3 +52,112 @@ const { title } = Astro.props;
     color: var(--text);
   }
 </style>
+
+<script>
+  const step = 15;
+  const initialDelay = 300; // Match browser's initial delay (~300ms)
+
+  type KeyName = "w" | "a" | "s" | "d" | "h" | "j" | "k" | "l";
+
+  const keys: Record<KeyName, boolean> = {
+    w: false,
+    a: false,
+    s: false,
+    d: false,
+    h: false,
+    j: false,
+    k: false,
+    l: false,
+  };
+
+  let animationFrameId: number | null = null;
+  let delayTimeoutId: number | null = null;
+  let isInitialPress = false;
+
+  function scrollPage() {
+    let x = 0,
+      y = 0;
+    if (keys.w || keys.k) y -= step;
+    if (keys.s || keys.j) y += step;
+    if (keys.a || keys.h) x -= step;
+    if (keys.d || keys.l) x += step;
+
+    if (x || y) {
+      window.scrollBy({
+        top: y,
+        left: x,
+        behavior: "instant",
+      });
+    }
+  }
+
+  function animate() {
+    scrollPage();
+
+    const anyKeyPressed = Object.values(keys).some((pressed) => pressed);
+
+    if (anyKeyPressed) {
+      animationFrameId = requestAnimationFrame(animate);
+    } else {
+      animationFrameId = null;
+    }
+  }
+
+  function startScrolling() {
+    if (animationFrameId === null) {
+      animate();
+    }
+  }
+
+  window.addEventListener("keydown", (e: KeyboardEvent) => {
+    const tag = (document.activeElement as HTMLElement)?.tagName;
+    if (
+      tag === "INPUT" ||
+      tag === "TEXTAREA" ||
+      (document.activeElement as HTMLElement)?.isContentEditable
+    )
+      return;
+
+    const key = e.key.toLowerCase();
+    if (!(key in keys)) return;
+
+    const typedKey = key as KeyName;
+
+    if (!keys[typedKey]) {
+      keys[typedKey] = true;
+      isInitialPress = true;
+
+      // Bounce
+      scrollPage();
+
+      // Wait before continuous scrolling starts
+      if (delayTimeoutId !== null) {
+        clearTimeout(delayTimeoutId);
+      }
+
+      delayTimeoutId = window.setTimeout(() => {
+        isInitialPress = false;
+        startScrolling();
+        delayTimeoutId = null;
+      }, initialDelay);
+    }
+
+    e.preventDefault();
+  });
+
+  window.addEventListener("keyup", (e: KeyboardEvent) => {
+    const key = e.key.toLowerCase();
+    if (key in keys) {
+      const typedKey = key as KeyName;
+      keys[typedKey] = false;
+
+      // Clear the delay timer if key is released during initial delay
+      if (delayTimeoutId !== null) {
+        clearTimeout(delayTimeoutId);
+        delayTimeoutId = null;
+      }
+
+      e.preventDefault();
+    }
+  });
+</script>
