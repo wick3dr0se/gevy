@@ -126,9 +126,7 @@ const postsWithMeta = (posts || []).map((post) => ({
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2 space-y-8">
         <!-- Profile Card -->
-        <div
-          class="break-word bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-        >
+        <div class="break-word rounded-lg shadow-sm border border-gray-200 p-6">
           <div class="flex flex-wrap items-start gap-6">
             <Image
               src={targetProfile.avatar_url}
@@ -206,7 +204,7 @@ const postsWithMeta = (posts || []).map((post) => ({
                         </span>
                         <div
                           id="location-popover"
-                          class="absolute left-0 mt-2 w-80 p-2 bg-white border border-gray-300 rounded shadow-lg hidden z-10"
+                          class="absolute left-0 mt-2 w-80 p-2 border border-gray-300 rounded shadow-lg hidden z-10"
                         >
                           <iframe
                             src={`https://www.google.com/maps?q=${encodeURIComponent(targetProfile.location)}&output=embed`}
@@ -290,7 +288,7 @@ const postsWithMeta = (posts || []).map((post) => ({
           <h2 class="text-xl font-semibold text-gray-900">Posts</h2>
           {
             postsWithMeta.length === 0 ? (
-              <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center text-gray-600">
+              <div class="rounded-lg shadow-sm border border-gray-200 p-12 text-center text-gray-600">
                 No posts yet.
               </div>
             ) : (
@@ -303,7 +301,7 @@ const postsWithMeta = (posts || []).map((post) => ({
       </div>
 
       <div class="lg:col-span-1">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="rounded-lg shadow-sm border border-gray-200 p-6">
           <a
             href="/dashboard"
             class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
