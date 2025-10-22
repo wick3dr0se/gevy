@@ -26,7 +26,7 @@ function getTimeAgo(date: string): string {
 }
 ---
 
-<div class="rounded-lg shadow-sm border border-gray-200 p-6">
+<div class="rounded-lg shadow-sm border p-6">
   <div class="flex gap-4">
     <a href={`/profile/${post.profiles.github_username}`}>
       <img
@@ -40,17 +40,19 @@ function getTimeAgo(date: string): string {
       <div class="flex items-center gap-2">
         <a
           href={`/profile/${post.profiles.github_username}`}
-          class="font-semibold text-gray-900 hover:underline"
+          class="font-semibold text-[var(--text)] hover:underline"
         >
           {post.profiles.name || post.profiles.github_username}
         </a>
-        <span class="text-gray-500">·</span>
-        <span class="text-sm text-gray-500">
+        <span class="text-[var(--subtext)]">·</span>
+        <span class="text-sm text-[var(--subtext)]">
           {getTimeAgo(post.created_at)}
         </span>
       </div>
 
-      <p class="mt-2 text-gray-800 whitespace-pre-wrap">{post.content}</p>
+      <p class="mt-2 text-[var(--subtext)] whitespace-pre-wrap">
+        {post.content}
+      </p>
 
       <div class="mt-4 flex items-center gap-6">
         <form action="/api/posts/like" method="POST" class="inline">

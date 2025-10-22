@@ -17,14 +17,16 @@ const redirectUrl = `${Astro.url.origin}/api/auth/callback`;
 <Layout title="Gevy - Connect with Developers">
   <div class="min-h-screen flex items-center justify-center px-4">
     <div class="max-w-md w-full text-center">
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">Gevy</h1>
-      <p class="text-xl text-gray-600 mb-8">A social platform for developers</p>
+      <h1 class="text-4xl font-bold mb-4">Gevy</h1>
+      <p class="text-xl text-[var(--subtext)] mb-8">
+        A social platform for developers
+      </p>
 
-      <div class="rounded-lg shadow-lg border border-gray-200 p-8">
+      <div class="rounded-lg shadow-lg border p-8">
         <div class="mb-6">
           <div class="text-6xl mb-4">👨‍💻</div>
-          <h2 class="text-2xl font-semibold text-gray-900 mb-2">Get Started</h2>
-          <p class="text-gray-600">
+          <h2 class="text-2xl font-semibold mb-2">Get Started</h2>
+          <p class="text-[var(--subtext)]">
             Sign in with GitHub to connect with developers, share posts, and
             build your network.
           </p>
@@ -34,7 +36,7 @@ const redirectUrl = `${Astro.url.origin}/api/auth/callback`;
           <input type="hidden" name="redirectUrl" value={redirectUrl} />
           <button
             type="submit"
-            class="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-gray-400 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+            class="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-[var(--text)] rounded-lg hover:bg-[var(--subtext)] transition-colors font-medium text-[var(--bg)]"
           >
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path
@@ -45,9 +47,9 @@ const redirectUrl = `${Astro.url.origin}/api/auth/callback`;
           </button>
         </form>
 
-        <div class="mt-6 text-sm text-gray-500">
-          <p class="mb-2">Features:</p>
-          <ul class="text-left space-y-1">
+        <div class="mt-4 text-left text-sm text-[var(--subtext)]">
+          <h2 class="text-lg font-semibold mb-1">Features:</h2>
+          <ul class="space-y-1">
             <li>✓ Share posts and updates</li>
             <li>✓ Like and comment on posts</li>
             <li>✓ Follow other developers</li>

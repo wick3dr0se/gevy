@@ -20,13 +20,22 @@ const { user } = Astro.props;
         {
           user && (
             <nav class="hidden md:flex gap-6">
-              <a href="/dashboard" class="text-gray-600 hover:text-gray-900">
+              <a
+                href="/dashboard"
+                class="text-[var(--subtext)] hover:text-[var(--text)]"
+              >
                 Dashboard
               </a>
-              <a href="/feed" class="text-gray-600 hover:text-gray-900">
+              <a
+                href="/feed"
+                class="text-[var(--subtext)] hover:text-[var(--text)]"
+              >
                 Feed
               </a>
-              <a href="/discover" class="text-gray-600 hover:text-gray-900">
+              <a
+                href="/discover"
+                class="text-[var(--subtext)] hover:text-[var(--text)]"
+              >
                 Discover
               </a>
             </nav>
@@ -49,14 +58,14 @@ const { user } = Astro.props;
                 class="rounded-full"
                 loading="eager"
               />
-              <span class="text-gray-700 hidden sm:inline">
+              <span class="text-[var(--subtext)] hover:text-[var(--text)] hidden sm:inline">
                 {user.github_username}
               </span>
             </a>
             <form action="/api/auth/logout" method="POST">
               <button
                 type="submit"
-                class="text-sm text-gray-600 hover:text-gray-900"
+                class="text-sm text-[var(--subtext)] hover:text-[var(--text)]"
               >
                 Logout
               </button>

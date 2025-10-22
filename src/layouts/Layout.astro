@@ -37,13 +37,16 @@ const { title } = Astro.props;
   :root {
     --bg: #faf5e4;
     --text: #000;
+    --subtext: theme(colors.gray.700);
   }
 
   .dark {
     --bg: #232329;
     --text: #fff;
+    --subtext: theme(colors.gray.400);
   }
 
+  header,
   body {
     @apply bg-[var(--bg)] text-[var(--text)];
   }
