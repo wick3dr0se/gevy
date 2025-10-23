@@ -3,6 +3,7 @@ import { Image } from "astro:assets";
 import FollowButton from "./FollowButton.astro";
 import MapPopover from "./MapPopover.astro";
 import RepoGrid from "./RepoGrid.astro";
+import GitHubReadme from "../GitHubReadme.astro";
 
 interface Props {
   profile: any;
@@ -65,7 +66,7 @@ const profileReadmeHtml = profile.readme_html || null;
             {profile.location && <MapPopover location={profile.location} />}
             {profile.blog && (
               <span class="flex items-center gap-1">
-                🔗{" "}
+                🔗
                 <a
                   href={profile.blog}
                   target="_blank"
@@ -84,10 +85,7 @@ const profileReadmeHtml = profile.readme_html || null;
 
   {
     profileReadmeHtml && (
-      <div
-        class="mx-auto max-w-4xl p-6 rounded-lg"
-        set:html={profileReadmeHtml}
-      />
+      <GitHubReadme html={profileReadmeHtml} class="mx-auto max-w-4xl p-6" />
     )
   }
 
