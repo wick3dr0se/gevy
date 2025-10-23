@@ -13,6 +13,7 @@ export function createServerSupabaseClient(cookies: AstroCookies) {
       flowType: "pkce",
       detectSessionInUrl: true,
       persistSession: true,
+      autoRefreshToken: false,
       storage: {
         getItem: (key) => {
           const cookie = cookies.get(key);
