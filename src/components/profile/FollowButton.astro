@@ -1,0 +1,70 @@
+---
+interface Props {
+  followingId: string;
+  isFollowing: boolean;
+}
+
+const { followingId, isFollowing } = Astro.props;
+---
+
+<button
+  id="follow-btn"
+  data-following-id={followingId}
+  data-is-following={isFollowing}
+  class={`px-4 py-2 rounded-lg transition-colors font-medium ${
+    isFollowing
+      ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+      : "bg-blue-600 text-white hover:bg-blue-700"
+  }`}
+>
+  {isFollowing ? "Following" : "Follow"}
+</button>
+
+<script>
+  const followBtn = document.getElementById("follow-btn");
+
+  if (followBtn) {
+    followBtn.addEventListener("click", async () => {
+      const followingId = followBtn.getAttribute("data-following-id");
+
+      try {
+        const response = await fetch("/api/follow", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ followingId }),
+        });
+
+        const data = await response.json();
+
+        followBtn.setAttribute("data-is-following", String(data.isFollowing));
+        followBtn.textContent = data.isFollowing ? "Following" : "Follow";
+
+        if (data.isFollowing) {
+          followBtn.classList.remove(
+            "bg-blue-600",
+            "hover:bg-blue-700",
+            "text-white",
+          );
+          followBtn.classList.add(
+            "bg-gray-200",
+            "text-gray-700",
+            "hover:bg-gray-300",
+          );
+        } else {
+          followBtn.classList.remove(
+            "bg-gray-200",
+            "text-gray-700",
+            "hover:bg-gray-300",
+          );
+          followBtn.classList.add(
+            "bg-blue-600",
+            "text-white",
+            "hover:bg-blue-700",
+          );
+        }
+      } catch (error) {
+        console.error("Follow error:", error);
+      }
+    });
+  }
+</script>

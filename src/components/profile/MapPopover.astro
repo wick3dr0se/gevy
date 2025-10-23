@@ -1,0 +1,49 @@
+---
+interface Props {
+  location: string;
+}
+
+const { location } = Astro.props;
+---
+
+<div class="relative inline-block">
+  📍
+  <span id="map-trigger" class="underline cursor-pointer">
+    {location}
+  </span>
+  <div
+    id="map-popover"
+    class="absolute left-0 mt-2 w-80 p-2 border rounded shadow-lg hidden z-10"
+  >
+    <iframe
+      src={`https://www.google.com/maps?q=${encodeURIComponent(location)}&output=embed`}
+      class="w-full h-60"
+      loading="lazy"
+      allowfullscreen></iframe>
+  </div>
+</div>
+
+<script>
+  const mapTrigger = document.getElementById("map-trigger");
+  const mapPopover = document.getElementById("map-popover");
+
+  if (mapTrigger && mapPopover) {
+    let popoverTimeout: ReturnType<typeof setTimeout>;
+
+    const showPopover = () => {
+      clearTimeout(popoverTimeout);
+      mapPopover.classList.remove("hidden");
+    };
+
+    const hidePopover = () => {
+      popoverTimeout = setTimeout(() => {
+        mapPopover.classList.add("hidden");
+      }, 150);
+    };
+
+    mapTrigger.addEventListener("mouseenter", showPopover);
+    mapTrigger.addEventListener("mouseleave", hidePopover);
+    mapPopover.addEventListener("mouseenter", showPopover);
+    mapPopover.addEventListener("mouseleave", hidePopover);
+  }
+</script>

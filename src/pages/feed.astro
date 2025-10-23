@@ -1,9 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
-import CreatePost from "../components/CreatePost.astro";
-import PostCard from "../components/PostCard.astro";
+import CreatePost from "../components/posts/CreatePost.astro";
+import PostList from "../components/posts/PostList.astro";
 import { createServerSupabaseClient } from "../lib/supabase";
+import { getAllPosts } from "../lib/queries/posts";
 
 const supabase = createServerSupabaseClient(Astro.cookies);
 const {
@@ -20,45 +21,8 @@ const { data: profile } = await supabase
   .eq("id", session.user.id)
   .single();
 
-// Get all public posts
-const { data: posts } = await supabase
-  .from("posts")
-  .select(
-    `
-    *,
-    profiles (*)
-  `,
-  )
-  .order("created_at", { ascending: false })
-  .limit(50);
-
-const postsWithMeta = await Promise.all(
-  (posts || []).map(async (post) => {
-    const { count: likesCount } = await supabase
-      .from("post_likes")
-      .select("*", { count: "exact", head: true })
-      .eq("post_id", post.id);
-
-    const { data: userLike } = await supabase
-      .from("post_likes")
-      .select("id")
-      .eq("post_id", post.id)
-      .eq("user_id", session.user.id)
-      .single();
-
-    const { count: commentsCount } = await supabase
-      .from("comments")
-      .select("*", { count: "exact", head: true })
-      .eq("post_id", post.id);
-
-    return {
-      ...post,
-      likes_count: likesCount || 0,
-      comments_count: commentsCount || 0,
-      is_liked: !!userLike,
-    };
-  }),
-);
+// Get all public posts with metadata (using bulk queries - much faster!)
+const postsWithMeta = await getAllPosts(supabase, session.user.id);
 ---
 
 <Layout title="Feed - Gevy">
@@ -67,12 +31,7 @@ const postsWithMeta = await Promise.all(
   <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="space-y-6">
       <CreatePost user={profile} />
-
-      {
-        postsWithMeta.map((post) => (
-          <PostCard post={post} currentUserId={session.user.id} />
-        ))
-      }
+      <PostList posts={postsWithMeta} currentUserId={session.user.id} />
     </div>
   </main>
 </Layout>

@@ -34,7 +34,6 @@ export function createServerSupabaseClient(cookies: AstroCookies) {
   });
 }
 
-// Database types
 export interface Profile {
   id: string;
   github_username: string;
@@ -48,9 +47,12 @@ export interface Profile {
   public_repos: number;
   followers_count: number;
   following_count: number;
+  repos: GitHubRepo[] | null;
+  readme_html: string | null;
+  readme_markdown: string | null;
+  github_synced_at: string;
   created_at: string;
   updated_at: string;
-  github_synced_at: string;
 }
 
 export interface Post {
@@ -59,10 +61,16 @@ export interface Post {
   content: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface PostWithProfile extends Post {
   profiles: Profile;
-  likes_count?: number;
-  comments_count?: number;
-  is_liked?: boolean;
+}
+
+export interface PostWithMetadata extends PostWithProfile {
+  likes_count: number;
+  comments_count: number;
+  is_liked: boolean;
 }
 
 export interface Comment {
@@ -72,6 +80,9 @@ export interface Comment {
   content: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface CommentWithProfile extends Comment {
   profiles: Profile;
 }
 
@@ -80,4 +91,26 @@ export interface Follow {
   follower_id: string;
   following_id: string;
   created_at: string;
+}
+
+export interface PostLike {
+  id: string;
+  post_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export interface GitHubRepo {
+  id?: string;
+  profile_id?: string;
+  github_repo_id: number;
+  name: string;
+  full_name: string;
+  description: string | null;
+  html_url: string;
+  stargazers_count: number;
+  forks_count: number;
+  language: string | null;
+  updated_at?: string;
+  synced_at?: string;
 }

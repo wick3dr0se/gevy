@@ -1,11 +1,11 @@
 import { GitHubAPI } from "./github";
-import type { Profile } from "./supabase";
+import type { Profile } from "../supabase";
 import { marked } from "marked";
 
 export async function syncGitHubProfile(
   userId: string,
   providerToken: string,
-  supabaseClient: any
+  supabaseClient: any,
 ) {
   const github = new GitHubAPI(providerToken);
   const githubUser = await github.getUser();

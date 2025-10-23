@@ -1,9 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
-import CreatePost from "../components/CreatePost.astro";
-import PostCard from "../components/PostCard.astro";
+import CreatePost from "../components/posts/CreatePost.astro";
+import PostList from "../components/posts/PostList.astro";
 import { createServerSupabaseClient } from "../lib/supabase";
+import { getFeedPosts } from "../lib/queries/posts";
 
 const supabase = createServerSupabaseClient(Astro.cookies);
 const {
@@ -25,69 +26,8 @@ if (!profile) {
   return Astro.redirect("/");
 }
 
-// Get recent posts from followed users (and own posts)
-const { data: following } = await supabase
-  .from("follows")
-  .select("following_id")
-  .eq("follower_id", session.user.id);
-
-const followingIds = following?.map((f) => f.following_id) || [];
-followingIds.push(session.user.id);
-
-const { data: posts } = await supabase
-  .from("posts")
-  .select(
-    `
-    *,
-    profiles (*)
-  `,
-  )
-  .in("author_id", followingIds)
-  .order("created_at", { ascending: false })
-  .limit(20);
-
-// OPTIMIZATION: Get all counts in bulk queries instead of per-post
-const postIds = posts?.map((p) => p.id) || [];
-
-// Single query to get ALL like counts
-const { data: likeCounts } = await supabase
-  .from("post_likes")
-  .select("post_id")
-  .in("post_id", postIds);
-
-// Single query to get ALL user's likes
-const { data: userLikes } = await supabase
-  .from("post_likes")
-  .select("post_id")
-  .in("post_id", postIds)
-  .eq("user_id", session.user.id);
-
-// Single query to get ALL comment counts
-const { data: commentCounts } = await supabase
-  .from("comments")
-  .select("post_id")
-  .in("post_id", postIds);
-
-// Build lookup maps for O(1) access
-const likesMap = new Map<string, number>();
-likeCounts?.forEach((like) => {
-  likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
-});
-
-const userLikedSet = new Set(userLikes?.map((l) => l.post_id) || []);
-
-const commentsMap = new Map<string, number>();
-commentCounts?.forEach((comment) => {
-  commentsMap.set(comment.post_id, (commentsMap.get(comment.post_id) || 0) + 1);
-});
-
-// Map posts with metadata (no more async queries!)
-const postsWithMeta = (posts || []).map((post) => ({
-  ...post,
-  likes_count: likesMap.get(post.id) || 0,
-  comments_count: commentsMap.get(post.id) || 0,
-  is_liked: userLikedSet.has(post.id),
-}));
+// Get feed posts with metadata
+const postsWithMeta = await getFeedPosts(supabase, session.user.id);
 ---
 
 <Layout title="Dashboard - Gevy">
@@ -97,23 +37,15 @@ const postsWithMeta = (posts || []).map((post) => ({
     <div class="space-y-6">
       <CreatePost user={profile} />
 
-      {
-        postsWithMeta.length === 0 ? (
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-            <p class="text-gray-600 mb-4">
-              No posts yet. Start by following some developers or create your
-              first post!
-            </p>
-            href="/discover" class="inline-block px-6 py-2 bg-blue-600
-            text-white rounded-lg hover:bg-blue-700 transition-colors"
-            <a>Discover Developers</a>
-          </div>
-        ) : (
-          postsWithMeta.map((post) => (
-            <PostCard post={post} currentUserId={session.user.id} />
-          ))
-        )
-      }
+      <PostList
+        posts={postsWithMeta}
+        currentUserId={session.user.id}
+        emptyMessage="No posts yet. Start by following some developers or create your first post!"
+        emptyAction={{
+          text: "Discover Developers",
+          href: "/discover",
+        }}
+      />
     </div>
   </main>
 </Layout>
