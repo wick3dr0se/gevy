@@ -1,0 +1,12 @@
+---
+interface Props {
+  label: string;
+  value: number | string;
+}
+const { label, value } = Astro.props;
+---
+
+<div class={`flex gap-1 text-sm`}>
+  <span class="font-semibold text-[var(--text)]">{value}</span>
+  <span class="text-[var(--subtext)]">{label}</span>
+</div>

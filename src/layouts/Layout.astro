@@ -17,7 +17,7 @@ const { title } = Astro.props;
   <body class="min-h-screen">
     <slot />
     <footer
-      class="bg-white-500 border-t border-gray-200 py-6 mt-12 text-center text-sm text-gray-500"
+      class="border-t py-6 mt-12 text-center text-sm text-[var(--subtext)] border-[var(--text)]"
     >
       <div
         class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2"
@@ -38,12 +38,14 @@ const { title } = Astro.props;
     --bg: #faf5e4;
     --text: #000;
     --subtext: theme(colors.gray.700);
+    --accent: #2563eb;
   }
 
   .dark {
     --bg: #232329;
     --text: #fff;
     --subtext: theme(colors.gray.400);
+    --accent: #60a5fa;
   }
 
   header,

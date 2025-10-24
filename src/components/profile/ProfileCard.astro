@@ -2,25 +2,34 @@
 import { Image } from "astro:assets";
 import FollowButton from "./FollowButton.astro";
 import MapPopover from "./MapPopover.astro";
+import Stat from "./Stat.astro";
 import RepoGrid from "./RepoGrid.astro";
-import GitHubReadme from "../GitHubReadme.astro";
+import Readme from "../Readme.astro";
 
 interface Props {
   profile: any;
   isOwnProfile: boolean;
   isFollowing: boolean;
+  stats?: {
+    posts: number;
+    projects: number;
+    followers: number;
+    following: number;
+  };
 }
 
-const { profile, isOwnProfile, isFollowing } = Astro.props;
-const repos = profile.repos || [];
-const profileReadmeHtml = profile.readme_html || null;
+const { profile, isOwnProfile, isFollowing, stats } = Astro.props;
+
+// GitHub data (passed from parent component)
+const githubRepos = profile.repos || [];
+const githubReadmeHtml = profile.readme_html || null;
 ---
 
-<div class="break-word rounded-lg shadow-sm border p-6">
+<div class="rounded-lg shadow-sm border bg-[var(--bg)] p-6">
   <div class="flex flex-wrap items-start gap-6">
     <Image
-      src={profile.avatar_url}
-      alt={profile.github_username}
+      src={profile.avatar_url || profile.github_avatar_url}
+      alt={profile.display_name || profile.github_username}
       width="192"
       height="192"
       class="rounded-full"
@@ -28,12 +37,18 @@ const profileReadmeHtml = profile.readme_html || null;
     />
 
     <div class="flex-1">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 class="text-2xl font-bold">
-            {profile.name || profile.github_username}
+            {
+              profile.display_name ||
+                profile.github_name ||
+                profile.github_username
+            }
           </h1>
-          <p class="text-[var(--subtext)]">@{profile.github_username}</p>
+          <p class="text-[var(--subtext)]">
+            @{profile.username || profile.github_username}
+          </p>
         </div>
 
         {
@@ -43,39 +58,38 @@ const profileReadmeHtml = profile.readme_html || null;
         }
       </div>
 
-      {profile.bio && <p class="mt-3 text-[var(--subtext)]">{profile.bio}</p>}
+      {
+        (profile.bio || profile.github_bio) && (
+          <p class="mt-3 text-[var(--subtext)]">
+            {profile.bio || profile.github_bio}
+          </p>
+        )
+      }
 
-      <div class="mt-4 flex flex-wrap gap-6 text-sm">
-        <div>
-          <span class="font-semibold">{profile.public_repos}</span>
-          <span class="text-[var(--subtext)]"> repositories</span>
-        </div>
-        <div>
-          <span class="font-semibold">{profile.followers_count}</span>
-          <span class="text-[var(--subtext)]"> followers</span>
-        </div>
-        <div>
-          <span class="font-semibold">{profile.following_count}</span>
-          <span class="text-[var(--subtext)]"> following</span>
-        </div>
+      <div class="mt-4 flex flex-wrap gap-6">
+        <Stat label="posts" value={stats?.posts || 0} />
+        <Stat label="projects" value={stats?.projects || 0} />
+        <Stat label="followers" value={profile.followers_count || 0} />
+        <Stat label="following" value={profile.following_count || 0} />
       </div>
 
       {
-        (profile.location || profile.blog) && (
+        (profile.github_location ||
+          profile.website_url ||
+          profile.github_blog) && (
           <div class="mt-4 flex flex-wrap gap-4 text-sm text-[var(--subtext)]">
-            {profile.location && <MapPopover location={profile.location} />}
-            {profile.blog && (
-              <span class="flex items-center gap-1">
-                🔗
-                <a
-                  href={profile.blog}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="underline"
-                >
-                  {profile.blog}
-                </a>
-              </span>
+            {profile.github_location && (
+              <MapPopover location={profile.github_location} />
+            )}
+            {(profile.website_url || profile.github_blog) && (
+              <a
+                href={profile.website_url || profile.github_blog}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-1 hover:text-[var(--text)] transition-colors"
+              >
+                🔗 {profile.website_url || profile.github_blog}
+              </a>
             )}
           </div>
         )
@@ -83,11 +97,35 @@ const profileReadmeHtml = profile.readme_html || null;
     </div>
   </div>
 
-  {
-    profileReadmeHtml && (
-      <GitHubReadme html={profileReadmeHtml} class="mx-auto max-w-4xl p-6" />
-    )
-  }
+  <details class="mt-6 pt-6 border-t">
+    <summary
+      class="cursor-pointer text-sm font-semibold text-[var(--subtext)] hover:text-[var(--text)] flex items-center gap-2"
+    >
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path
+          d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+        ></path>
+      </svg>
+      GitHub Stats & Repositories
+    </summary>
 
-  {repos.length > 0 && <RepoGrid repos={repos} />}
+    <div class="mt-4 text-sm text-[var(--subtext)] flex flex-wrap gap-6">
+      <Stat label="public repos" value={profile.github_public_repos || 0} />
+      <Stat label="followers" value={profile.github_followers_count || 0} />
+      <Stat label="following" value={profile.github_following_count || 0} />
+    </div>
+
+    {githubRepos.length > 0 && <RepoGrid repos={githubRepos} />}
+
+    {
+      githubReadmeHtml && (
+        <div class="mt-4 p-4 rounded-lg border">
+          <h3 class="text-sm font-semibold mb-3 text-[var(--text)]">
+            GitHub Profile README
+          </h3>
+          <Readme html={githubReadmeHtml} />
+        </div>
+      )
+    }
+  </details>
 </div>

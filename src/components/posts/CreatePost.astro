@@ -6,7 +6,7 @@ const { user } = Astro.props;
   <form action="/api/posts/create" method="POST" class="space-y-4">
     <div class="flex gap-4">
       <img
-        src={user.avatar_url}
+        src={user.github_avatar_url}
         alt={user.github_username}
         class="w-10 h-10 rounded-full flex-shrink-0"
       />

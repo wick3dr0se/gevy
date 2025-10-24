@@ -62,7 +62,9 @@ const postsWithMeta = await getPostsWithMetadata(
 );
 ---
 
-<Layout title={`${targetProfile.name || targetProfile.github_username} - Gevy`}>
+<Layout
+  title={`${targetProfile.github_name || targetProfile.github_username} - Gevy`}
+>
   <Header user={currentUserProfile} />
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
