@@ -48,13 +48,13 @@ const { user } = Astro.props;
         user && (
           <div class="flex items-center gap-4">
             <a
-              href={`/profile/${user.github_username}`}
+              href={`/profile/${user.username}`}
               class="flex items-center gap-2"
             >
               <Avatar user={user} size={28} loading="eager" />
 
               <span class="text-[var(--subtext)] hover:text-[var(--text)] hidden sm:inline">
-                {user.github_username}
+                {user.username}
               </span>
             </a>
             <form action="/api/auth/logout" method="POST">

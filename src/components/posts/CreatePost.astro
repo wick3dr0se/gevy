@@ -7,7 +7,7 @@ const { user } = Astro.props;
 <div class="rounded-lg shadow-sm border p-6">
   <form action="/api/posts/create" method="POST" class="space-y-4">
     <div class="flex gap-4">
-      <Avatar user={user} size={36} loading="eager" />
+      <Avatar user={user} />
       <textarea
         name="content"
         placeholder="Share what you're working on..."

@@ -28,7 +28,15 @@ const githubReadmeHtml = profile.readme_html || null;
 
 <div class="rounded-lg shadow-sm border bg-[var(--bg)] p-6">
   <div class="flex flex-wrap items-start gap-6">
-    <Avatar user={profile.user} size={44} class="rounded-full" loading="lazy" />
+    <Avatar
+      user={{
+        username: profile.username,
+        github_username: profile.github_username,
+        github_avatar_url: profile.github_avatar_url,
+        avatar_url: profile.avatar_url,
+      }}
+      size={100}
+    />
 
     <div class="flex-1">
       <div class="flex items-center justify-between flex-wrap gap-4">

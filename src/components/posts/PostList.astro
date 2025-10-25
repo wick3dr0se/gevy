@@ -17,12 +17,14 @@ const { posts, currentUserId, emptyMessage, emptyAction } = Astro.props;
 <div class="space-y-6">
   {
     posts.length === 0 ? (
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-        <p class="text-gray-600 mb-4">{emptyMessage || "No posts yet."}</p>
+      <div class="rounded-lg shadow-sm border p-12 text-center">
+        <p class="text-[var(--subtext)] mb-4">
+          {emptyMessage || "No posts yet."}
+        </p>
         {emptyAction && (
           <a
             href={emptyAction.href}
-            class="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            class="inline-block px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
           >
             {emptyAction.text}
           </a>
