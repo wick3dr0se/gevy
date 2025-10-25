@@ -5,6 +5,7 @@ import MapPopover from "./MapPopover.astro";
 import Stat from "./Stat.astro";
 import RepoGrid from "./RepoGrid.astro";
 import Readme from "../Readme.astro";
+import Avatar from "../users/Avatar.astro";
 
 interface Props {
   profile: any;
@@ -27,14 +28,7 @@ const githubReadmeHtml = profile.readme_html || null;
 
 <div class="rounded-lg shadow-sm border bg-[var(--bg)] p-6">
   <div class="flex flex-wrap items-start gap-6">
-    <Image
-      src={profile.avatar_url || profile.github_avatar_url}
-      alt={profile.display_name || profile.github_username}
-      width="192"
-      height="192"
-      class="rounded-full"
-      loading="lazy"
-    />
+    <Avatar user={profile.user} size={44} class="rounded-full" loading="lazy" />
 
     <div class="flex-1">
       <div class="flex items-center justify-between flex-wrap gap-4">

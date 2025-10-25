@@ -1,5 +1,6 @@
 ---
 import { Image } from "astro:assets";
+import Avatar from "./users/Avatar.astro";
 const { user } = Astro.props;
 ---
 
@@ -50,14 +51,8 @@ const { user } = Astro.props;
               href={`/profile/${user.github_username}`}
               class="flex items-center gap-2"
             >
-              <Image
-                src={user.github_avatar_url}
-                alt={user.github_username}
-                width="28"
-                height="28"
-                class="rounded-full"
-                loading="eager"
-              />
+              <Avatar user={user} size={28} loading="eager" />
+
               <span class="text-[var(--subtext)] hover:text-[var(--text)] hidden sm:inline">
                 {user.github_username}
               </span>

@@ -1,10 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Header from "../components/Header.astro";
 import CreatePost from "../components/posts/CreatePost.astro";
 import PostList from "../components/posts/PostList.astro";
 import { createServerSupabaseClient } from "../lib/supabase";
 import { getFeedPosts } from "../lib/queries/posts";
+import Header from "../components/Header.astro";
 
 const supabase = createServerSupabaseClient(Astro.cookies);
 const {
@@ -15,18 +15,41 @@ if (!session) {
   return Astro.redirect("/");
 }
 
-// Get user profile
-const { data: profile } = await supabase
+let profile = null;
+let profileError = null;
+
+const { data: profileData, error: profileFetchError } = await supabase
   .from("profiles")
   .select("*")
   .eq("id", session.user.id)
   .single();
 
-if (!profile) {
-  return Astro.redirect("/");
+if (profileFetchError) {
+  console.error("Profile fetch error:", profileFetchError);
+
+  // Wait a moment and try one more time (race condition with trigger)
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const { data: retryProfile, error: retryError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", session.user.id)
+    .single();
+
+  if (retryError || !retryProfile) {
+    console.error("Profile still not found after retry:", retryError);
+    return Astro.redirect("/error?message=profile_not_found");
+  }
+
+  profile = retryProfile;
+} else {
+  profile = profileData;
 }
 
-// Get feed posts with metadata
+if (!profile) {
+  return Astro.redirect("/error?message=profile_not_found");
+}
+
 const postsWithMeta = await getFeedPosts(supabase, session.user.id);
 ---
 

@@ -1,0 +1,35 @@
+---
+interface Props {
+  user: {
+    avatar_url?: string | null;
+    github_avatar_url?: string | null;
+    username?: string | null;
+    github_username?: string | null;
+  };
+  size?: number;
+  class?: string;
+  loading?: "lazy" | "eager";
+}
+
+const {
+  user,
+  size = 40,
+  class: className = "",
+  loading = "lazy",
+} = Astro.props;
+
+const avatarUrl = user?.github_username
+  ? user.github_avatar_url
+  : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || "default"}`;
+
+const alt = user?.username || user?.github_username || "User";
+---
+
+<img
+  src={avatarUrl}
+  alt={alt}
+  width={size}
+  height={size}
+  class={`rounded-full ${className}`}
+  loading={loading}
+/>

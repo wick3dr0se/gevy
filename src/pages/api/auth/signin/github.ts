@@ -1,10 +1,9 @@
 import type { APIRoute } from "astro";
-import { createServerSupabaseClient } from "../../../lib/supabase";
+import { createServerSupabaseClient } from "../../../../lib/supabase";
 
 export const GET: APIRoute = async ({ cookies, url }) => {
   const supabase = createServerSupabaseClient(cookies);
 
-  // Use the current origin to build callback URL dynamically
   const redirectTo = `${url.origin}/api/auth/callback`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({

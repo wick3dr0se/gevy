@@ -34,6 +34,17 @@ export function createServerSupabaseClient(cookies: AstroCookies) {
   });
 }
 
+export function createServiceSupabaseClient() {
+  if (!import.meta.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
+  }
+
+  return createClient(
+    import.meta.env.SUPABASE_URL!,
+    import.meta.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
+
 export interface Profile {
   id: string;
 
