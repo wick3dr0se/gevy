@@ -1,23 +1,11 @@
 import type { APIRoute } from "astro";
 import { createServerSupabaseClient } from "../../../lib/supabase";
 
-function generateUsername(email: string, userId: string): string {
-  const base =
-    email
-      .split("@")[0]
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "") || "user";
-  const suffix = userId.slice(0, 6);
-  return `${base}_${suffix}`;
-}
-
 export const GET: APIRoute = async ({ cookies, redirect, url }) => {
   const supabase = createServerSupabaseClient(cookies);
   const code = url.searchParams.get("code");
 
-  if (!code) {
-    return redirect("/?error=no_code");
-  }
+  if (!code) return redirect("/?error=no_code");
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
@@ -27,43 +15,29 @@ export const GET: APIRoute = async ({ cookies, redirect, url }) => {
   }
 
   const user = data.session?.user;
-  if (!user) {
-    return redirect("/?error=no_user");
-  }
+  if (!user) return redirect("/?error=no_user");
 
   const { data: existingProfile } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, avatar_url, username")
     .eq("id", user.id)
     .single();
 
-  // If no profile, create one (fallback if DB trigger failed)
   if (!existingProfile) {
-    console.log("Profile doesn't exist, creating fallback...");
-
-    const profileData: any = {
-      id: user.id,
-      username: generateUsername(user.email || "user", user.id),
-      display_name: user.email?.split("@")[0] || null,
-      bio: null,
-      custom_avatar_url: null,
-      website_url: null,
-      theme: "default",
-      followers_count: 0,
-      following_count: 0,
-    };
-
-    const { error: insertError } = await supabase
-      .from("profiles")
-      .insert(profileData);
-
-    if (insertError) {
-      console.error("Failed to create profile:", insertError);
-      return redirect("/?error=profile_creation_failed");
-    }
+    console.warn("Profile missing despite trigger — this should rarely happen");
+    return redirect("/?error=no_profile");
   }
 
-  // If GitHub OAuth, enrich with GitHub data
+  if (!existingProfile.avatar_url) {
+    await supabase
+      .from("profiles")
+      .update({
+        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${existingProfile.username}`,
+      })
+      .eq("id", user.id);
+  }
+
+  // GitHub OAuth sync
   const providerToken = data.session?.provider_token;
   if (providerToken) {
     try {
@@ -83,7 +57,6 @@ export const GET: APIRoute = async ({ cookies, redirect, url }) => {
             username: githubUser.login,
             github_username: githubUser.login,
             github_id: githubUser.id,
-            github_avatar_url: githubUser.avatar_url,
             github_name: githubUser.name,
             github_bio: githubUser.bio,
             github_location: githubUser.location,
@@ -92,6 +65,7 @@ export const GET: APIRoute = async ({ cookies, redirect, url }) => {
             github_public_repos: githubUser.public_repos,
             github_followers_count: githubUser.followers,
             github_following_count: githubUser.following,
+            // DO NOT overwrite avatar_url — the DB trigger already handles it
           })
           .eq("id", user.id);
       }

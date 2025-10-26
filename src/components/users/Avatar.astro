@@ -20,9 +20,11 @@ const {
   loading = "lazy",
 } = Astro.props;
 
-const avatarUrl = user?.username
-  ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
-  : (user?.github_avatar_url ?? "/default-avatar.svg");
+const avatarUrl =
+  user?.avatar_url ||
+  (user?.username
+    ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
+    : (user?.github_avatar_url ?? "/default-avatar.svg"));
 
 const alt = user?.username || user?.github_username || "User";
 ---

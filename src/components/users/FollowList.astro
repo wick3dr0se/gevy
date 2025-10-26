@@ -53,12 +53,12 @@ const { userId, type, count } = Astro.props as Props;
                 (u) => `
               <a href="/profile/${u.username || u.github_username}"
                  class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                <img src="${u.avatar_url || u.github_avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.username}`}"
+                <img src="${`https://api.dicebear.com/7.x/avataaars/svg?seed=${u.username}` || u.avatar_url || u.github_avatar_url}"
                      alt="${u.username || u.github_username}"
                      class="w-10 h-10 rounded-full" />
                 <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-gray-900 dark:text-white truncate">${u.display_name || u.username || u.github_username}</p>
-                  <p class="text-sm text-gray-500 dark:text-gray-400 truncate">@${u.username || u.github_username}</p>
+                  <p class="font-semibold text-[var(--text)] truncate">${u.display_name || u.username || u.github_username}</p>
+                  <p class="text-sm text-[var(--subtext)] truncate">@${u.github_username || u.username}</p>
                 </div>
               </a>
             `,
