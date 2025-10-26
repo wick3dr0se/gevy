@@ -1,0 +1,102 @@
+---
+interface Props {
+  followingId: string;
+  isFollowing: boolean;
+  class?: string;
+  fullWidth?: boolean;
+}
+
+const {
+  followingId,
+  isFollowing,
+  class: className = "",
+  fullWidth = false,
+} = Astro.props;
+---
+
+<button
+  class={`follow-button px-4 py-2 rounded-lg transition-colors font-medium ${
+    fullWidth ? "w-full" : ""
+  } ${
+    isFollowing
+      ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+      : "bg-blue-600 text-white hover:bg-blue-700"
+  } ${className}`}
+  data-following-id={followingId}
+  data-is-following={isFollowing}
+>
+  {isFollowing ? "Following" : "Follow"}
+</button>
+
+<script>
+  function initFollowButtons() {
+    document.querySelectorAll(".follow-button").forEach((button) => {
+      if (button.hasAttribute("data-initialized")) return;
+      button.setAttribute("data-initialized", "true");
+
+      button.addEventListener("click", async (e) => {
+        const btn = e.target as HTMLButtonElement;
+        const followingId = btn.getAttribute("data-following-id");
+        const isFollowing = btn.getAttribute("data-is-following") === "true";
+
+        if (!followingId) return;
+
+        btn.disabled = true;
+        const originalText = btn.textContent;
+        btn.textContent = isFollowing ? "Unfollowing..." : "Following...";
+
+        try {
+          const response = await fetch("/api/follow", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ followingId }),
+          });
+
+          if (!response.ok) throw new Error("Follow request failed");
+
+          const data = await response.json();
+
+          // Update button
+          btn.setAttribute("data-is-following", data.isFollowing.toString());
+          btn.textContent = data.isFollowing ? "Following" : "Follow";
+
+          // Update styles
+          if (data.isFollowing) {
+            btn.classList.remove(
+              "bg-blue-600",
+              "text-white",
+              "hover:bg-blue-700",
+            );
+            btn.classList.add(
+              "bg-gray-200",
+              "dark:bg-gray-700",
+              "text-gray-700",
+              "dark:text-gray-300",
+              "hover:bg-gray-300",
+              "dark:hover:bg-gray-600",
+            );
+          } else {
+            btn.classList.remove(
+              "bg-gray-200",
+              "dark:bg-gray-700",
+              "text-gray-700",
+              "dark:text-gray-300",
+              "hover:bg-gray-300",
+              "dark:hover:bg-gray-600",
+            );
+            btn.classList.add("bg-blue-600", "text-white", "hover:bg-blue-700");
+          }
+        } catch (error) {
+          console.error("Follow error:", error);
+          alert("Failed to follow/unfollow. Please try again.");
+          btn.textContent = originalText;
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  initFollowButtons();
+  document.addEventListener("astro:page-load", initFollowButtons);
+</script>

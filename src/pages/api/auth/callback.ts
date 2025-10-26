@@ -45,12 +45,12 @@ export const GET: APIRoute = async ({ cookies, redirect, url }) => {
       id: user.id,
       username: generateUsername(user.email || "user", user.id),
       display_name: user.email?.split("@")[0] || null,
-      gevy_bio: null,
+      bio: null,
       custom_avatar_url: null,
       website_url: null,
       theme: "default",
-      gevy_followers_count: 0,
-      gevy_following_count: 0,
+      followers_count: 0,
+      following_count: 0,
     };
 
     const { error: insertError } = await supabase
