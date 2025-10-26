@@ -1,13 +1,15 @@
 ---
 import { Image } from "astro:assets";
 import Avatar from "./users/Avatar.astro";
+import ThemeToggle from "./ThemeToggle.astro";
+
 const { user } = Astro.props;
 ---
 
-<header class="border-b sticky top-0 z-50">
+<header class="border-b border-[var(--border)] sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16">
-      <div class="flex items-center gap-8">
+      <div class="flex items-center gap-4 sm:gap-8">
         <a href="/dashboard" class="flex items-center gap-2">
           <Image
             src="/logo.svg"
@@ -18,26 +20,71 @@ const { user } = Astro.props;
           />
           <span class="text-xl font-bold">Gevy</span>
         </a>
+
         {
           user && (
-            <nav class="hidden md:flex gap-6">
+            <nav class="flex gap-3 sm:gap-6">
               <a
                 href="/dashboard"
-                class="text-[var(--subtext)] hover:text-[var(--text)]"
+                class="flex items-center gap-2 text-[var(--subtext)] hover:text-[var(--accent)] transition-colors"
+                title="Dashboard"
               >
-                Dashboard
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
+                </svg>
+                <span class="hidden md:inline">Dashboard</span>
               </a>
+
               <a
                 href="/feed"
-                class="text-[var(--subtext)] hover:text-[var(--text)]"
+                class="flex items-center gap-2 text-[var(--subtext)] hover:text-[var(--accent)] transition-colors"
+                title="Feed"
               >
-                Feed
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+                  />
+                </svg>
+                <span class="hidden md:inline">Feed</span>
               </a>
+
               <a
                 href="/discover"
-                class="text-[var(--subtext)] hover:text-[var(--text)]"
+                class="flex items-center gap-2 text-[var(--subtext)] hover:text-[var(--accent)] transition-colors"
+                title="Discover"
               >
-                Discover
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <span class="hidden md:inline">Discover</span>
               </a>
             </nav>
           )
@@ -46,61 +93,40 @@ const { user } = Astro.props;
 
       {
         user && (
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 sm:gap-4">
             <a
               href={`/profile/${user.username}`}
-              class="flex items-center gap-2"
+              class="group flex items-center gap-2"
+              title={user.username}
             >
-              <Avatar user={user} size={28} loading="eager" />
-
-              <span class="text-[var(--subtext)] hover:text-[var(--text)] hidden sm:inline">
+              <Avatar
+                user={user}
+                size={28}
+                loading="eager"
+                class="rounded-full transition-all duration-200 group-hover:ring-2 group-hover:ring-[var(--accent)] group-hover:ring-offset-2 group-hover:ring-offset-[var(--bg)]"
+              />
+              <span class="hidden sm:inline text-[var(--subtext)] transition-colors duration-200 group-hover:text-[var(--accent)]">
                 {user.username}
               </span>
             </a>
-            <form action="/api/auth/logout" method="POST">
+
+            <ThemeToggle />
+
+            <form
+              action="/api/auth/logout"
+              method="POST"
+              class="hidden sm:block"
+            >
               <button
                 type="submit"
-                class="text-sm text-[var(--subtext)] hover:text-[var(--text)]"
+                class="text-sm text-[var(--subtext)] hover:text-[var(--danger)] transition-colors"
               >
                 Logout
               </button>
             </form>
-            <button type="button" class="p-2 rounded" aria-label="Toggle theme">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 4.5a1 1 0 0 1 1 1V7a1 1 0 1 1-2 0V5.5a1 1 0 0 1 1-1Zm0 12a1 1 0 0 1 1 1V19a1 1 0 1 1-2 0v-1.5a1 1 0 0 1 1-1Zm7.5-4.5a1 1 0 0 1 1 1H22a1 1 0 1 1 0 2h-1.5a1 1 0 1 1 0-2ZM3.5 12a1 1 0 0 1 1-1H6a1 1 0 1 1 0 2H4.5a1 1 0 0 1-1-1ZM16.95 7.05a1 1 0 0 1 1.414 0L19.071 8.76a1 1 0 1 1-1.414 1.414L16.95 8.465a1 1 0 0 1 0-1.415ZM4.929 15.243a1 1 0 0 1 1.414 0l.707.707a1 1 0 0 1-1.414 1.414l-.707-.707a1 1 0 0 1 0-1.414ZM4.93 8.465a1 1 0 1 1 1.414-1.415l.707.707A1 1 0 0 1 5.637 9.17l-.707-.707Zm11.314 7.071a1 1 0 1 1 1.415 1.415l-.707.707a1 1 0 1 1-1.415-1.415l.707-.707ZM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z" />
-              </svg>
-            </button>
           </div>
         )
       }
     </div>
   </div>
 </header>
-
-<script>
-  window.addEventListener("DOMContentLoaded", () => {
-    const html = document.documentElement;
-
-    // Apply theme on page load
-    const savedTheme = localStorage.getItem("theme");
-    if (
-      savedTheme === "dark" ||
-      (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)
-    ) {
-      html.classList.add("dark");
-    } else {
-      html.classList.remove("dark");
-    }
-
-    const toggleButton = document.querySelector('[aria-label="Toggle theme"]');
-    if (toggleButton) {
-      toggleButton.addEventListener("click", () => {
-        html.classList.toggle("dark");
-        localStorage.setItem(
-          "theme",
-          html.classList.contains("dark") ? "dark" : "light",
-        );
-      });
-    }
-  });
-</script>

@@ -35,22 +35,47 @@ const { title } = Astro.props;
   @custom-variant dark (&:where(.dark, .dark *));
 
   :root {
-    --bg: #faf5e4;
-    --text: #000;
+    --bg: #f6f3e7;
+    --surface: theme(colors.white);
+    --text: theme(colors.gray.900);
     --subtext: theme(colors.gray.700);
-    --accent: #2563eb;
+    --border: theme(colors.gray.300);
+
+    --accent: theme(colors.blue.600);
+    --accent-hover: theme(colors.blue.700);
+    --accent-faint: theme(colors.blue.100);
+    --muted: theme(colors.gray.100);
+
+    --danger: theme(colors.red.600);
+    --success: theme(colors.green.600);
+    --warning: theme(colors.amber.500);
   }
 
   .dark {
     --bg: #232329;
-    --text: #fff;
+    --surface: theme(colors.gray.900);
+    --text: theme(colors.gray.100);
     --subtext: theme(colors.gray.400);
-    --accent: #60a5fa;
+    --border: theme(colors.gray.700);
+
+    --accent: theme(colors.blue.400);
+    --accent-hover: theme(colors.blue.300);
+    --accent-faint: theme(colors.blue.950);
+    --muted: theme(colors.gray.800);
+
+    --danger: theme(colors.red.500);
+    --success: theme(colors.green.500);
+    --warning: theme(colors.amber.400);
   }
 
-  header,
-  body {
+  body,
+  header {
     @apply bg-[var(--bg)] text-[var(--text)];
+  }
+
+  hr,
+  .border {
+    @apply border-[var(--border)];
   }
 </style>
 
