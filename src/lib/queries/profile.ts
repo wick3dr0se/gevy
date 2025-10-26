@@ -10,7 +10,7 @@ export async function getProfileWithSync(
   let { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("github_username", username)
+    .eq("username", username)
     .single();
 
   if (!profile) return null;
@@ -26,7 +26,6 @@ export async function getProfileWithSync(
     if (refreshed) profile = refreshed;
   }
 
-  // Parse README if needed
   if (!profile.readme_html && profile.readme_markdown) {
     profile.readme_html = await marked.parse(profile.readme_markdown);
   }
