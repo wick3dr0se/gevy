@@ -24,7 +24,7 @@ const { posts, currentUserId, emptyMessage, emptyAction } = Astro.props;
         {emptyAction && (
           <a
             href={emptyAction.href}
-            class="inline-block px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            class="inline-block px-6 py-2 bg-[var(--accent)] rounded-lg hover:bg-blue-700 transition-colors"
           >
             {emptyAction.text}
           </a>

@@ -13,7 +13,7 @@ const { location } = Astro.props;
   </span>
   <div
     id="map-popover"
-    class="absolute left-0 mt-2 w-80 p-2 border rounded shadow-lg hidden z-10"
+    class="absolute left-0 mt-2 w-80 p-2 border rounded shadow-lg hidden z-10 bg-[var(--bg)]"
   >
     <iframe
       src={`https://www.google.com/maps?q=${encodeURIComponent(location)}&output=embed`}

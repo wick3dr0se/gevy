@@ -45,7 +45,7 @@ function getTimeAgo(date: string): string {
       <div class="flex items-center gap-2">
         <a
           href={`/profile/${post.profiles.username}`}
-          class="font-semibold text-[var(--text)] hover:underline"
+          class="font-semibold hover:underline"
         >
           {post.profiles.name || post.profiles.username}
         </a>
@@ -75,7 +75,7 @@ function getTimeAgo(date: string): string {
 
         <a
           href={`/post/${post.id}`}
-          class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
+          class="flex items-center gap-2 text-gray-500 hover:text-[var(--accent)] transition-colors"
         >
           <span>💬</span>
           <span class="text-sm">{post.comments_count || 0}</span>

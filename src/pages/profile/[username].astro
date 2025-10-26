@@ -81,7 +81,7 @@ const postsWithMeta = await getPostsWithMetadata(
           <h2 class="text-xl font-semibold">Posts</h2>
           {
             postsWithMeta.length === 0 ? (
-              <div class="rounded-lg shadow-sm border p-12 text-center text-[var(--subtext)]">
+              <div class="rounded-lg shadow-sm border border-[var(--border)] p-12 text-center text-[var(--subtext)]">
                 No posts yet.
               </div>
             ) : (
@@ -94,7 +94,7 @@ const postsWithMeta = await getPostsWithMetadata(
       </div>
 
       <div class="lg:col-span-1">
-        <div class="rounded-lg shadow-sm border p-6">
+        <div class="rounded-lg shadow-sm border border-[var(--border)] p-6">
           <a
             href="/dashboard"
             class="inline-flex items-center gap-2 text-[var(--subtext)] hover:text-[var(--text)]"

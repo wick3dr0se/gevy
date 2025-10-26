@@ -27,7 +27,7 @@ const githubRepos = profile.repos || [];
 const githubReadmeHtml = profile.readme_html || null;
 ---
 
-<div class="rounded-lg shadow-sm border bg-[var(--bg)] p-6">
+<div class="rounded-lg shadow-sm border p-6">
   <div class="flex flex-wrap items-start gap-6">
     <Avatar
       user={{
@@ -108,7 +108,7 @@ const githubReadmeHtml = profile.readme_html || null;
     </div>
   </div>
 
-  <details class="mt-6 pt-6 border-t">
+  <details class="mt-6 pt-6 border-t border-[var(--border)]">
     <summary
       class="cursor-pointer text-sm font-semibold text-[var(--subtext)] hover:text-[var(--text)] flex items-center gap-2"
     >

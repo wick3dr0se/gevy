@@ -20,7 +20,7 @@ const {
   } ${
     isFollowing
       ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-      : "bg-blue-600 text-white hover:bg-blue-700"
+      : "bg-[var(--accent)] text-white hover:bg-blue-700"
   } ${className}`}
   data-following-id={followingId}
   data-is-following={isFollowing}
@@ -63,7 +63,7 @@ const {
           // Update styles
           if (data.isFollowing) {
             btn.classList.remove(
-              "bg-blue-600",
+              "bg-[var(--accent)]",
               "text-white",
               "hover:bg-blue-700",
             );
@@ -84,7 +84,11 @@ const {
               "hover:bg-gray-300",
               "dark:hover:bg-gray-600",
             );
-            btn.classList.add("bg-blue-600", "text-white", "hover:bg-blue-700");
+            btn.classList.add(
+              "bg-[var(--accent)]",
+              "text-white",
+              "hover:bg-blue-700",
+            );
           }
         } catch (error) {
           console.error("Follow error:", error);
