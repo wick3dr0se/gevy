@@ -1,4 +1,6 @@
 ---
+import { getProfileLink } from "../../lib/user";
+import { getDisplayName, getProfileHandle } from "../../lib/user";
 import Avatar from "./Avatar.astro";
 import FollowButton from "./FollowButton.astro";
 import FollowList from "./FollowList.astro";
@@ -25,13 +27,13 @@ const { profile, isFollowing } = Astro.props;
 
     <div class="flex-1 min-w-0">
       <a
-        href={`/profile/${profile.username || profile.github_username}`}
-        class="font-semibold text-gray-900 dark:text-white hover:underline block truncate"
+        href={getProfileLink(profile)}
+        class="font-semibold hover:underline block truncate"
       >
-        {profile.display_name || profile.username || profile.github_username}
+        {getDisplayName(profile)}
       </a>
       <p class="text-sm text-[var(--subtext)] truncate">
-        @{profile.github_username || profile.username}
+        {getProfileHandle(profile)}
       </p>
 
       {

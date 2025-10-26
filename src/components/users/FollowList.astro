@@ -1,4 +1,6 @@
 ---
+import { getAvatarUrl, getDisplayName, getProfileLink } from "../../lib/user";
+
 interface Props {
   userId: string;
   type: "followers" | "following";
@@ -13,65 +15,89 @@ const { userId, type, count } = Astro.props as Props;
   data-user-id={userId}
   data-type={type}
 >
-  <span class="followers-trigger underline cursor-pointer">
+  <span
+    class="followers-trigger underline cursor-pointer hover:text-[var(--accent)]"
+  >
     {count}
     <span class="text-[var(--subtext)]">{type}</span>
   </span>
-
   <div
     class="followers-popover absolute left-0 mt-2 w-80 max-h-96 overflow-y-auto border rounded-lg shadow-lg bg-[var(--bg)] hidden z-10"
   >
-    <div
-      class="followers-list p-3 text-center text-gray-500 dark:text-gray-400"
-    >
+    <div class="followers-list p-3 text-center text-[var(--subtext)]">
       Loading...
     </div>
   </div>
+</div>
 
-  <script is:inline>
-    (() => {
-      const wrapper = document.currentScript.parentElement;
+<script>
+  import {
+    getAvatarUrl,
+    getDisplayName,
+    getProfileHandle,
+    getProfileLink,
+  } from "../../lib/user";
+
+  type User = {
+    display_name?: string | null;
+    username?: string | null;
+    github_username?: string | null;
+    avatar_url?: string | null;
+    github_avatar_url?: string | null;
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".followers-wrapper").forEach((wrapper) => {
+      if (!(wrapper instanceof HTMLElement)) return;
+
       const trigger = wrapper.querySelector(".followers-trigger");
       const popover = wrapper.querySelector(".followers-popover");
       const list = wrapper.querySelector(".followers-list");
+
+      if (!trigger || !popover || !list) return;
+
       let fetched = false;
-      let timeout;
+      let timeout: ReturnType<typeof setTimeout> | null = null;
 
       const fetchUsers = () => {
         if (fetched) return;
         fetched = true;
+
         fetch(`/api/users/${wrapper.dataset.userId}/${wrapper.dataset.type}`)
           .then((r) => r.json())
-          .then((data) => {
+          .then((data: { users?: User[] }) => {
             const users = data.users || [];
             if (!users.length) {
-              list.innerHTML = `<div class="py-4 text-gray-500">No ${wrapper.dataset.type} yet</div>`;
+              list.innerHTML = `<div class="py-4 text-[var(--subtext)]">No ${wrapper.dataset.type} yet</div>`;
               return;
             }
+
             list.innerHTML = users
-              .map(
-                (u) => `
-              <a href="/profile/${u.username || u.github_username}"
-                 class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                <img src="${`https://api.dicebear.com/7.x/avataaars/svg?seed=${u.username}` || u.avatar_url || u.github_avatar_url}"
-                     alt="${u.username || u.github_username}"
-                     class="w-10 h-10 rounded-full" />
-                <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-[var(--text)] truncate">${u.display_name || u.username || u.github_username}</p>
-                  <p class="text-sm text-[var(--subtext)] truncate">@${u.github_username || u.username}</p>
-                </div>
-              </a>
-            `,
-              )
+              .map((u: User) => {
+                const displayName = getDisplayName(u);
+
+                return `
+                  <a href="${getProfileLink(u)}"
+                     class="flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--muted)] transition">
+                    <img src="${getAvatarUrl(u)}"
+                         alt="${displayName}"
+                         class="w-10 h-10 rounded-full" />
+                    <div class="flex-1 min-w-0">
+                      <p class="font-semibold text-[var(--text)] truncate">${displayName}</p>
+                      <p class="text-sm text-[var(--subtext)] truncate">${getProfileHandle(u)}</p>
+                    </div>
+                  </a>
+                `;
+              })
               .join("");
           })
           .catch(() => {
-            list.innerHTML = `<div class="text-red-500 py-4">Failed to load</div>`;
+            list.innerHTML = `<div class="text-[var(--danger)] py-4">Failed to load</div>`;
           });
       };
 
       const showPopover = () => {
-        clearTimeout(timeout);
+        if (timeout) clearTimeout(timeout);
         popover.classList.remove("hidden");
         fetchUsers();
       };
@@ -93,6 +119,6 @@ const { userId, type, count } = Astro.props as Props;
         if (isHidden) showPopover();
         else hidePopover();
       });
-    })();
-  </script>
-</div>
+    });
+  });
+</script>

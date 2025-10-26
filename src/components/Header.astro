@@ -2,6 +2,7 @@
 import { Image } from "astro:assets";
 import Avatar from "./users/Avatar.astro";
 import ThemeToggle from "./ThemeToggle.astro";
+import { getDisplayName, getProfileLink } from "../lib/user";
 
 const { user } = Astro.props;
 ---
@@ -95,7 +96,7 @@ const { user } = Astro.props;
         user && (
           <div class="flex items-center gap-2 sm:gap-4">
             <a
-              href={`/profile/${user.username}`}
+              href={getProfileLink(user)}
               class="group flex items-center gap-2"
               title={user.username}
             >
@@ -106,7 +107,7 @@ const { user } = Astro.props;
                 class="rounded-full transition-all duration-200 group-hover:ring-2 group-hover:ring-[var(--accent)] group-hover:ring-offset-2 group-hover:ring-offset-[var(--bg)]"
               />
               <span class="hidden sm:inline text-[var(--subtext)] transition-colors duration-200 group-hover:text-[var(--accent)]">
-                {user.username}
+                {getDisplayName(user)}
               </span>
             </a>
 

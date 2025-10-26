@@ -1,8 +1,10 @@
 ---
 import { Image } from "astro:assets";
+import { getAvatarUrl, getDisplayName } from "../../lib/user";
 
 interface Props {
   user: {
+    display_name?: string | null;
     avatar_url?: string | null;
     github_avatar_url?: string | null;
     username?: string | null;
@@ -20,17 +22,11 @@ const {
   loading = "lazy",
 } = Astro.props;
 
-const avatarUrl =
-  user?.avatar_url ||
-  (user?.username
-    ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
-    : (user?.github_avatar_url ?? "/default-avatar.svg"));
-
-const alt = user?.username || user?.github_username || "User";
+const alt = getDisplayName(user);
 ---
 
 <Image
-  src={avatarUrl}
+  src={getAvatarUrl(user)}
   alt={alt}
   width={size}
   height={size}

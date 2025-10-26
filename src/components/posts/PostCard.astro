@@ -1,4 +1,5 @@
 ---
+import { getDisplayName, getProfileLink } from "../../lib/user";
 import Avatar from "../users/Avatar.astro";
 
 const { post, currentUserId } = Astro.props;
@@ -30,24 +31,17 @@ function getTimeAgo(date: string): string {
 
 <div class="rounded-lg shadow-sm border p-6">
   <div class="flex gap-4">
-    <a href={`/profile/${post.profiles.username}`}>
-      <Avatar
-        user={{
-          username: post.profiles.username,
-          github_username: post.profiles.github_username,
-          github_avatar_url: post.profiles.github_avatar_url,
-          avatar_url: post.profiles.avatar_url,
-        }}
-      />
+    <a href={getProfileLink(post.profiles)}>
+      <Avatar user={post.profiles} />
     </a>
 
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-2">
         <a
-          href={`/profile/${post.profiles.username}`}
+          href={getProfileLink(post.profiles)}
           class="font-semibold hover:underline"
         >
-          {post.profiles.name || post.profiles.username}
+          {getDisplayName(post.profiles)}
         </a>
         <span class="text-[var(--subtext)]">·</span>
         <span class="text-sm text-[var(--subtext)]">

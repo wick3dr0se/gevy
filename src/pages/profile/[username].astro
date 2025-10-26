@@ -1,5 +1,4 @@
 ---
-// pages/profile/[username].astro
 import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import PostCard from "../../components/posts/PostCard.astro";
@@ -7,6 +6,7 @@ import ProfileCard from "../../components/profile/ProfileCard.astro";
 import { createServerSupabaseClient } from "../../lib/supabase";
 import { getProfileWithSync } from "../../lib/queries/profile";
 import { getPostsWithMetadata } from "../../lib/queries/posts";
+import { getDisplayName } from "../../lib/user";
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -24,32 +24,30 @@ if (!session) {
 
 const { username } = Astro.params as { username: string };
 
-// Get current user profile
 const { data: currentUserProfile } = await supabase
   .from("profiles")
   .select("*")
   .eq("id", session.user.id)
   .single();
 
-// Get target profile with GitHub sync
-const targetProfile = await getProfileWithSync(
+const profile = await getProfileWithSync(
   supabase,
   username,
   session.provider_token ?? undefined,
 );
 
-if (!targetProfile) {
+if (!profile) {
   return Astro.redirect("/dashboard");
 }
 
-const isOwnProfile = targetProfile.id === session.user.id;
+const isOwnProfile = profile.id === session.user.id;
 
 // Check if following
 const { data: followData } = await supabase
   .from("follows")
   .select("id")
   .eq("follower_id", session.user.id)
-  .eq("following_id", targetProfile.id)
+  .eq("following_id", profile.id)
   .single();
 
 const isFollowing = !!followData;
@@ -57,21 +55,19 @@ const isFollowing = !!followData;
 // Get posts with metadata
 const postsWithMeta = await getPostsWithMetadata(
   supabase,
-  targetProfile.id,
+  profile.id,
   session.user.id,
 );
 ---
 
-<Layout
-  title={`${targetProfile.username || targetProfile.github_username} - Gevy`}
->
+<Layout title={`${getDisplayName(profile)} - Gevy`}>
   <Header user={currentUserProfile} />
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2 space-y-8">
         <ProfileCard
-          profile={targetProfile}
+          profile={profile}
           isOwnProfile={isOwnProfile}
           isFollowing={isFollowing}
         />
@@ -81,7 +77,7 @@ const postsWithMeta = await getPostsWithMetadata(
           <h2 class="text-xl font-semibold">Posts</h2>
           {
             postsWithMeta.length === 0 ? (
-              <div class="rounded-lg shadow-sm border border-[var(--border)] p-12 text-center text-[var(--subtext)]">
+              <div class="rounded-lg shadow-sm border p-12 text-center text-[var(--subtext)]">
                 No posts yet.
               </div>
             ) : (
@@ -94,7 +90,7 @@ const postsWithMeta = await getPostsWithMetadata(
       </div>
 
       <div class="lg:col-span-1">
-        <div class="rounded-lg shadow-sm border border-[var(--border)] p-6">
+        <div class="rounded-lg shadow-sm border p-6">
           <a
             href="/dashboard"
             class="inline-flex items-center gap-2 text-[var(--subtext)] hover:text-[var(--text)]"
