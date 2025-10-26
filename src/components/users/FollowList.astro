@@ -1,0 +1,98 @@
+---
+interface Props {
+  userId: string;
+  type: "followers" | "following";
+  count: number;
+}
+
+const { userId, type, count } = Astro.props as Props;
+---
+
+<div
+  class="relative inline-block followers-wrapper"
+  data-user-id={userId}
+  data-type={type}
+>
+  <span class="followers-trigger underline cursor-pointer">
+    {count}
+    <span class="text-[var(--subtext)]">{type}</span>
+  </span>
+
+  <div
+    class="followers-popover absolute left-0 mt-2 w-80 max-h-96 overflow-y-auto border rounded-lg shadow-lg bg-[var(--bg)] hidden z-10"
+  >
+    <div
+      class="followers-list p-3 text-center text-gray-500 dark:text-gray-400"
+    >
+      Loading...
+    </div>
+  </div>
+
+  <script is:inline>
+    (() => {
+      const wrapper = document.currentScript.parentElement;
+      const trigger = wrapper.querySelector(".followers-trigger");
+      const popover = wrapper.querySelector(".followers-popover");
+      const list = wrapper.querySelector(".followers-list");
+      let fetched = false;
+      let timeout;
+
+      const fetchUsers = () => {
+        if (fetched) return;
+        fetched = true;
+        fetch(`/api/users/${wrapper.dataset.userId}/${wrapper.dataset.type}`)
+          .then((r) => r.json())
+          .then((data) => {
+            const users = data.users || [];
+            if (!users.length) {
+              list.innerHTML = `<div class="py-4 text-gray-500">No ${wrapper.dataset.type} yet</div>`;
+              return;
+            }
+            list.innerHTML = users
+              .map(
+                (u) => `
+              <a href="/profile/${u.username || u.github_username}"
+                 class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <img src="${u.avatar_url || u.github_avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.username}`}"
+                     alt="${u.username || u.github_username}"
+                     class="w-10 h-10 rounded-full" />
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-gray-900 dark:text-white truncate">${u.display_name || u.username || u.github_username}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 truncate">@${u.username || u.github_username}</p>
+                </div>
+              </a>
+            `,
+              )
+              .join("");
+          })
+          .catch(() => {
+            list.innerHTML = `<div class="text-red-500 py-4">Failed to load</div>`;
+          });
+      };
+
+      const showPopover = () => {
+        clearTimeout(timeout);
+        popover.classList.remove("hidden");
+        fetchUsers();
+      };
+
+      const hidePopover = () => {
+        timeout = setTimeout(() => popover.classList.add("hidden"), 150);
+      };
+
+      trigger.addEventListener("mouseenter", showPopover);
+      trigger.addEventListener("mouseleave", hidePopover);
+      popover.addEventListener("mouseenter", showPopover);
+      popover.addEventListener("mouseleave", hidePopover);
+
+      trigger.addEventListener("click", () => {
+        const isHidden = popover.classList.contains("hidden");
+        document
+          .querySelectorAll(".followers-popover")
+          .forEach((p) => p.classList.add("hidden"));
+        if (isHidden) showPopover();
+        else hidePopover();
+      });
+    })();
+  </script>
+</div>

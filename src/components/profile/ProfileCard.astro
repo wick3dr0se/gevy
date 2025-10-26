@@ -6,6 +6,7 @@ import Stat from "./Stat.astro";
 import RepoGrid from "./RepoGrid.astro";
 import Readme from "../Readme.astro";
 import Avatar from "../users/Avatar.astro";
+import FollowList from "../users/FollowList.astro";
 
 interface Props {
   profile: any;
@@ -71,8 +72,16 @@ const githubReadmeHtml = profile.readme_html || null;
       <div class="mt-4 flex flex-wrap gap-6">
         <Stat label="posts" value={stats?.posts || 0} />
         <Stat label="projects" value={stats?.projects || 0} />
-        <Stat label="followers" value={profile.followers_count || 0} />
-        <Stat label="following" value={profile.following_count || 0} />
+        <FollowList
+          userId={profile.id}
+          type="followers"
+          count={profile.followers_count || 0}
+        />
+        <FollowList
+          userId={profile.id}
+          type="following"
+          count={profile.following_count || 0}
+        />
       </div>
 
       {

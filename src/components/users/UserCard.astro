@@ -1,6 +1,7 @@
 ---
 import Avatar from "./Avatar.astro";
 import FollowButton from "../FollowButton.astro";
+import FollowList from "./FollowList.astro";
 
 interface Props {
   profile: any;
@@ -41,10 +42,12 @@ const { profile, isFollowing } = Astro.props;
         )
       }
 
-      <div class="mt-3 flex gap-4 text-xs text-[var(--subtext)]">
-        <span>
-          <span>{profile.followers_count || 0}</span> followers
-        </span>
+      <div class="mt-3 flex gap-4 text-xs">
+        <FollowList
+          userId={profile.id}
+          type="followers"
+          count={profile.followers_count || 0}
+        />
       </div>
 
       <FollowButton
