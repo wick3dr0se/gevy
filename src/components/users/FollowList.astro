@@ -1,9 +1,5 @@
 ---
-import {
-  getAvatarUrl,
-  getDisplayName,
-  getProfileLink,
-} from "../../lib/queries/user";
+import Popover from "../Popover.astro";
 
 interface Props {
   userId: string;
@@ -11,28 +7,34 @@ interface Props {
   count: number;
 }
 
-const { userId, type, count } = Astro.props as Props;
+const { userId, type, count } = Astro.props;
 ---
 
-<div
-  class="relative inline-block followers-wrapper"
-  data-user-id={userId}
-  data-type={type}
+<Popover
+  triggerClass="followers-trigger"
+  popoverClass="followers-popover"
+  closeOthers={true}
+  closeOthersSelector=".followers-popover"
 >
   <span
+    slot="trigger"
     class="followers-trigger underline cursor-pointer hover:text-[var(--accent)]"
   >
     {count}
     <span class="text-[var(--subtext)]">{type}</span>
   </span>
+
   <div
+    slot="content"
     class="followers-popover absolute left-0 mt-2 w-80 max-h-96 overflow-y-auto border rounded-lg shadow-lg bg-[var(--bg)] hidden z-10"
+    data-user-id={userId}
+    data-type={type}
   >
     <div class="followers-list p-3 text-center text-[var(--subtext)]">
       Loading...
     </div>
   </div>
-</div>
+</Popover>
 
 <script>
   import {
@@ -51,35 +53,29 @@ const { userId, type, count } = Astro.props as Props;
   };
 
   document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".followers-wrapper").forEach((wrapper) => {
-      if (!(wrapper instanceof HTMLElement)) return;
+    document.querySelectorAll(".followers-popover").forEach((popover) => {
+      if (!(popover instanceof HTMLElement)) return;
 
-      const trigger = wrapper.querySelector(".followers-trigger");
-      const popover = wrapper.querySelector(".followers-popover");
-      const list = wrapper.querySelector(".followers-list");
-
-      if (!trigger || !popover || !list) return;
+      const list = popover.querySelector(".followers-list");
+      if (!list) return;
 
       let fetched = false;
-      let timeout: ReturnType<typeof setTimeout> | null = null;
 
-      const fetchUsers = () => {
+      popover.addEventListener("popover:show", () => {
         if (fetched) return;
         fetched = true;
 
-        fetch(`/api/users/${wrapper.dataset.userId}/${wrapper.dataset.type}`)
+        fetch(`/api/users/${popover.dataset.userId}/${popover.dataset.type}`)
           .then((r) => r.json())
           .then((data: { users?: User[] }) => {
             const users = data.users || [];
             if (!users.length) {
-              list.innerHTML = `<div class="py-4 text-[var(--subtext)]">No ${wrapper.dataset.type} yet</div>`;
+              list.innerHTML = `<div class="py-4 text-[var(--subtext)]">No ${popover.dataset.type} yet</div>`;
               return;
             }
-
             list.innerHTML = users
               .map((u: User) => {
                 const displayName = getDisplayName(u);
-
                 return `
                   <a href="${getProfileLink(u)}"
                      class="flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--muted)] transition">
@@ -98,30 +94,6 @@ const { userId, type, count } = Astro.props as Props;
           .catch(() => {
             list.innerHTML = `<div class="text-[var(--danger)] py-4">Failed to load</div>`;
           });
-      };
-
-      const showPopover = () => {
-        if (timeout) clearTimeout(timeout);
-        popover.classList.remove("hidden");
-        fetchUsers();
-      };
-
-      const hidePopover = () => {
-        timeout = setTimeout(() => popover.classList.add("hidden"), 150);
-      };
-
-      trigger.addEventListener("mouseenter", showPopover);
-      trigger.addEventListener("mouseleave", hidePopover);
-      popover.addEventListener("mouseenter", showPopover);
-      popover.addEventListener("mouseleave", hidePopover);
-
-      trigger.addEventListener("click", () => {
-        const isHidden = popover.classList.contains("hidden");
-        document
-          .querySelectorAll(".followers-popover")
-          .forEach((p) => p.classList.add("hidden"));
-        if (isHidden) showPopover();
-        else hidePopover();
       });
     });
   });
