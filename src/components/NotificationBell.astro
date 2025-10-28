@@ -1,0 +1,268 @@
+---
+interface Props {
+  userId: string;
+  initialCount: number;
+}
+const { userId, initialCount } = Astro.props;
+---
+
+<div
+  class="relative"
+  data-notification-container
+  data-user-id={userId}
+  data-initial-count={initialCount}
+>
+  <button
+    class="notification-bell relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+    aria-label="Notifications"
+    type="button"
+  >
+    <svg
+      class="w-6 h-6 text-[var(--subtext)]"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      ></path>
+    </svg>
+    {
+      initialCount > 0 && (
+        <span class="notification-badge absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+          {" "}
+          {initialCount > 9 ? "9+" : initialCount}{" "}
+        </span>
+      )
+    }
+  </button>
+  <div
+    class="notification-dropdown hidden absolute right-0 mt-2 w-80 bg-[var(--bg)] rounded-lg shadow-xl border max-h-96 overflow-y-auto z-[9999]"
+  >
+    <div
+      class="p-4 border-b border-[var(--border)] flex items-center justify-between"
+    >
+      <h3 class="font-semibold">Notifications</h3>
+      <button
+        class="hover:cursor-pointer mark-all-read text-xs text-blue-600 dark:text-blue-400 hover:underline"
+        type="button">Mark all read</button
+      >
+    </div>
+    <div
+      class="notifications-list divide-y divide-gray-200 dark:divide-gray-700"
+    >
+      <div class="p-4 text-center text-[var(--subtext)]">Loading...</div>
+    </div>
+  </div>
+</div>
+<script>
+  import { createClient } from "@supabase/supabase-js";
+  function initNotifications() {
+    document
+      .querySelectorAll("[data-notification-container]")
+      .forEach((container) => {
+        const userId = container.getAttribute("data-user-id")!;
+        const bell = container.querySelector(".notification-bell")!;
+        const dropdown = container.querySelector(".notification-dropdown")!;
+        const list = container.querySelector(".notifications-list")!;
+        const markAllRead = container.querySelector(".mark-all-read")!;
+        let badge = container.querySelector(".notification-badge");
+
+        const supabase = createClient(
+          import.meta.env.PUBLIC_SUPABASE_URL,
+          import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+        );
+
+        const timeAgo = (date: string) => {
+          const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+          if (s < 60) return "just now";
+          if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+          if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+          if (s < 604800) return `${Math.floor(s / 86400)}d ago`;
+          return `${Math.floor(s / 604800)}w ago`;
+        };
+
+        const updateBadge = (count: number) => {
+          if (!badge) {
+            badge = document.createElement("span");
+            badge.className =
+              "notification-badge absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center";
+            bell.appendChild(badge);
+          }
+          if (count > 0) {
+            badge.textContent = count > 9 ? "9+" : count.toString();
+            badge.classList.remove("hidden");
+          } else {
+            badge?.classList.add("hidden");
+          }
+        };
+
+        const renderNotifications = (notifications: any[]) => {
+          if (!notifications.length) {
+            list.innerHTML =
+              '<div class="p-4 text-center text-gray-500 dark:text-gray-400">No notifications</div>';
+            updateBadge(0);
+            return;
+          }
+
+          const unreadCount = notifications.filter((n) => !n.read).length;
+          updateBadge(unreadCount);
+
+          list.innerHTML = notifications
+            .map((n) => {
+              const actor = n.actor || {};
+              const username =
+                actor.username || actor.github_username || "Unknown";
+              const avatar =
+                actor.avatar_url ||
+                actor.github_avatar_url ||
+                `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
+              const postId = n.posts?.[0]?.id;
+
+              const typeMap: Record<string, [string, string]> = {
+                follow: ["started following you", `/profile/${username}`],
+                like: ["liked your post", postId ? `/post/${postId}` : "#"],
+                comment: [
+                  "commented on your post",
+                  postId ? `/post/${postId}` : "#",
+                ],
+                post: ["created a new post", postId ? `/post/${postId}` : "#"],
+              };
+
+              const [msg, link] = typeMap[n.type as keyof typeof typeMap] || [
+                "sent you a notification",
+                "#",
+              ];
+
+              return `
+              <a href="${link}" class="block p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                !n.read ? "bg-blue-50 dark:bg-blue-900/10" : ""
+              }" data-notification-id="${n.id}" data-read="${n.read}">
+                <div class="flex gap-3">
+                  <img src="${avatar}" alt="${username}" class="w-10 h-10 rounded-full" />
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-900 dark:text-white"><span class="font-semibold">${username}</span> ${msg}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${timeAgo(
+                      n.created_at,
+                    )}</p>
+                  </div>
+                  ${!n.read ? '<div class="w-2 h-2 bg-blue-600 rounded-full"></div>' : ""}
+                </div>
+              </a>
+            `;
+            })
+            .join("");
+
+          // attach click handlers
+          list.querySelectorAll("[data-notification-id]").forEach((el) => {
+            el.addEventListener("click", async () => {
+              if (el.getAttribute("data-read") === "true") return;
+
+              const notificationId = el.getAttribute("data-notification-id");
+              await supabase
+                .from("notifications")
+                .update({ read: true })
+                .eq("id", notificationId);
+
+              // reload notifications to keep badge accurate
+              await loadNotifications();
+            });
+          });
+        };
+
+        const loadNotifications = async () => {
+          try {
+            const { data: notifications } = await supabase
+              .from("notifications")
+              .select(
+                `
+              *,
+              actor:profiles!notifications_actor_id_fkey(
+                username,
+                github_username,
+                avatar_url,
+                github_avatar_url
+              ),
+              posts(id, content)
+            `,
+              )
+              .eq("recipient_id", userId)
+              .order("created_at", { ascending: false })
+              .limit(20);
+
+            renderNotifications(notifications || []);
+          } catch (err) {
+            console.error("Failed to load notifications:", err);
+            list.innerHTML =
+              '<div class="p-4 text-center text-red-500 dark:text-red-400">Error loading notifications</div>';
+            updateBadge(0);
+          }
+        };
+
+        bell.addEventListener("click", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropdown.classList.toggle("hidden");
+          if (!dropdown.classList.contains("hidden")) await loadNotifications();
+        });
+
+        document.addEventListener("click", (e) => {
+          const t = e.target as Node;
+          if (!bell.contains(t) && !dropdown.contains(t))
+            dropdown.classList.add("hidden");
+        });
+
+        markAllRead.addEventListener("click", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          await supabase
+            .from("notifications")
+            .update({ read: true })
+            .eq("recipient_id", userId)
+            .eq("read", false);
+
+          await loadNotifications();
+        });
+
+        // reactive real-time listener
+        supabase
+          .channel("notifications")
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "notifications",
+              filter: `recipient_id=eq.${userId}`,
+            },
+            async () => {
+              await loadNotifications();
+            },
+          )
+          .subscribe();
+      });
+  }
+
+  document.readyState === "loading"
+    ? document.addEventListener("DOMContentLoaded", initNotifications)
+    : initNotifications();
+  document.addEventListener("astro:page-load", initNotifications);
+</script>
+<style>
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
+</style>

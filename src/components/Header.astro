@@ -3,8 +3,21 @@ import { Image } from "astro:assets";
 import Avatar from "./users/Avatar.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 import { getDisplayName, getProfileLink } from "../lib/user";
+import NotificationBell from "./NotificationBell.astro";
+import { createServerSupabaseClient } from "../lib/supabase";
 
 const { user } = Astro.props;
+
+let unreadCount = 0;
+if (user) {
+  const supabase = createServerSupabaseClient(Astro.cookies);
+  const { count } = await supabase
+    .from("notifications")
+    .select("*", { count: "exact", head: true })
+    .eq("recipient_id", user.id)
+    .eq("read", false);
+  unreadCount = count || 0;
+}
 ---
 
 <header class="border-b border-[var(--border)] sticky top-0 z-50">
@@ -45,7 +58,6 @@ const { user } = Astro.props;
                 </svg>
                 <span class="hidden md:inline">Dashboard</span>
               </a>
-
               <a
                 href="/feed"
                 class="flex items-center gap-2 text-[var(--subtext)] hover:text-[var(--accent)] transition-colors"
@@ -66,7 +78,6 @@ const { user } = Astro.props;
                 </svg>
                 <span class="hidden md:inline">Feed</span>
               </a>
-
               <a
                 href="/discover"
                 class="flex items-center gap-2 text-[var(--subtext)] hover:text-[var(--accent)] transition-colors"
@@ -95,6 +106,7 @@ const { user } = Astro.props;
       {
         user && (
           <div class="flex items-center gap-2 sm:gap-4">
+            <NotificationBell userId={user.id} initialCount={unreadCount} />{" "}
             <a
               href={getProfileLink(user)}
               class="group flex items-center gap-2"
@@ -110,9 +122,7 @@ const { user } = Astro.props;
                 {getDisplayName(user)}
               </span>
             </a>
-
             <ThemeToggle />
-
             <form
               action="/api/auth/logout"
               method="POST"
