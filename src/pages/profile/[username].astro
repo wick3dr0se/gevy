@@ -2,11 +2,11 @@
 import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import PostCard from "../../components/posts/PostCard.astro";
-import ProfileCard from "../../components/profile/ProfileCard.astro";
+import ProfileCard from "../../components/users/profile/ProfileCard.astro";
 import { createServerSupabaseClient } from "../../lib/supabase";
 import { getProfileWithSync } from "../../lib/queries/profile";
 import { getPostsWithMetadata } from "../../lib/queries/posts";
-import { getDisplayName } from "../../lib/user";
+import { getDisplayName } from "../../lib/queries/user";
 
 Astro.response.headers.set(
   "Cache-Control",

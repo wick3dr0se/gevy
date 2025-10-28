@@ -1,13 +1,12 @@
 ---
 import { Image } from "astro:assets";
-import FollowButton from "../users/FollowButton.astro";
-import MapPopover from "./MapPopover.astro";
-import Stat from "./Stat.astro";
-import RepoGrid from "./RepoGrid.astro";
-import Readme from "../Readme.astro";
-import Avatar from "../users/Avatar.astro";
-import FollowList from "../users/FollowList.astro";
-import { getDisplayName, getProfileHandle } from "../../lib/user";
+import FollowButton from "../FollowButton.astro";
+import Minimap from "../../Minimap.astro";
+import Stat from "../../Stat.astro";
+import Readme from "../../Readme.astro";
+import Avatar from "../Avatar.astro";
+import FollowList from "../FollowList.astro";
+import { getDisplayName, getProfileHandle } from "../../../lib/queries/user";
 
 interface Props {
   profile: any;
@@ -79,7 +78,7 @@ const githubReadmeHtml = profile.readme_html || null;
           profile.github_blog) && (
           <div class="mt-4 flex flex-wrap gap-4 text-sm text-[var(--subtext)]">
             {profile.github_location && (
-              <MapPopover location={profile.github_location} />
+              <Minimap location={profile.github_location} />
             )}
             {(profile.website_url || profile.github_blog) && (
               <a
@@ -115,7 +114,40 @@ const githubReadmeHtml = profile.readme_html || null;
       <Stat label="following" value={profile.github_following_count || 0} />
     </div>
 
-    {githubRepos.length > 0 && <RepoGrid repos={githubRepos} />}
+    {
+      githubRepos.length > 0 && (
+        <div class="mt-6 pt-6 border-t border-[var(--border)]">
+          <h2 class="text-lg font-semibold mb-4">Top Repositories</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {githubRepos.map((repo: any) => (
+              <a
+                href={repo.html_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="p-4 border rounded-lg hover:!border-[var(--accent)] transition-colors"
+              >
+                <h3 class="font-semibold truncate">{repo.name}</h3>
+                {repo.description && (
+                  <p class="text-sm text-[var(--subtext)] mt-1 line-clamp-2">
+                    {repo.description}
+                  </p>
+                )}
+                <div class="mt-3 flex items-center gap-4 text-sm text-[var(--subtext)]">
+                  {repo.language && (
+                    <span class="flex items-center gap-1">
+                      <span class="w-3 h-3 rounded-full bg-[var(--accent)]" />
+                      {repo.language}
+                    </span>
+                  )}
+                  <span>⭐ {repo.stargazers_count}</span>
+                  <span>🔱 {repo.forks_count}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )
+    }
 
     {
       githubReadmeHtml && (

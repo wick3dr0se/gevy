@@ -1,5 +1,9 @@
 ---
-import { getAvatarUrl, getDisplayName, getProfileLink } from "../../lib/user";
+import {
+  getAvatarUrl,
+  getDisplayName,
+  getProfileLink,
+} from "../../lib/queries/user";
 
 interface Props {
   userId: string;
@@ -36,7 +40,7 @@ const { userId, type, count } = Astro.props as Props;
     getDisplayName,
     getProfileHandle,
     getProfileLink,
-  } from "../../lib/user";
+  } from "../../lib/queries/user";
 
   type User = {
     display_name?: string | null;
