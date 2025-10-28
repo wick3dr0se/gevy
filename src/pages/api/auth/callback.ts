@@ -50,7 +50,6 @@ export const GET: APIRoute = async ({ cookies, redirect, url }) => {
 
       if (githubRes.ok) {
         const githubUser = await githubRes.json();
-
         await supabase
           .from("profiles")
           .update({
@@ -65,7 +64,6 @@ export const GET: APIRoute = async ({ cookies, redirect, url }) => {
             github_public_repos: githubUser.public_repos,
             github_followers_count: githubUser.followers,
             github_following_count: githubUser.following,
-            // DO NOT overwrite avatar_url — the DB trigger already handles it
           })
           .eq("id", user.id);
       }
@@ -74,5 +72,5 @@ export const GET: APIRoute = async ({ cookies, redirect, url }) => {
     }
   }
 
-  return redirect("/dashboard");
+  return redirect("/auth-success");
 };

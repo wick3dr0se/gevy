@@ -12,10 +12,19 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: redirectTo },
+    options: {
+      emailRedirectTo: redirectTo,
+      shouldCreateUser: true,
+    },
   });
 
-  if (error) return new Response(error.message, { status: 400 });
+  if (error) {
+    console.error("Magic link error:", error);
+    return new Response(error.message, { status: 400 });
+  }
 
-  return new Response("Magic link sent", { status: 200 });
+  return Response.redirect(
+    `${url.origin}/?message=check-email&email=${encodeURIComponent(email)}`,
+    303,
+  );
 };

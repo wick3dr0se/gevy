@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signing you in...</title>
+  </head>
+  <body>
+    <div
+      style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui; text-align: center;"
+    >
+      <div>
+        <h1>✓ Signed in successfully!</h1>
+        <p>Redirecting to dashboard...</p>
+      </div>
+    </div>
+
+    <script>
+      // Check if we were opened by clicking a link (magic link in email)
+      // vs. OAuth redirect in same window (GitHub login)
+      const isNewTab =
+        window.opener !== null ||
+        document.referrer.includes("gmail") ||
+        document.referrer.includes("mail");
+
+      if (isNewTab) {
+        // Magic link flow - signal other tabs and close
+        localStorage.setItem("auth-complete", Date.now().toString());
+
+        setTimeout(() => {
+          window.close();
+        }, 1000);
+      } else {
+        // OAuth flow (same window) - just redirect to dashboard
+        window.location.href = "/dashboard";
+      }
+    </script>
+  </body>
+</html>
