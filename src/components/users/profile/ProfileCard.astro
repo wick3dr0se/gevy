@@ -43,7 +43,14 @@ const githubReadmeHtml = profile.readme_html || null;
         </div>
 
         {
-          !isOwnProfile && (
+          isOwnProfile ? (
+            <button
+              id="edit-profile-btn"
+              class="px-4 py-2 border rounded-lg hover:bg-[var(--accent)] hover:text-white transition-colors"
+            >
+              Edit Profile
+            </button>
+          ) : (
             <FollowButton followingId={profile.id} isFollowing={isFollowing} />
           )
         }
@@ -161,3 +168,122 @@ const githubReadmeHtml = profile.readme_html || null;
     }
   </details>
 </div>
+
+<!-- Edit Profile Modal (only for own profile) -->
+{
+  isOwnProfile && (
+    <div
+      id="edit-profile-modal"
+      class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
+      <div class="bg-[var(--bg)] rounded-lg shadow-xl max-w-md w-full p-6 border">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">Edit Profile</h2>
+          <button
+            id="close-modal-btn"
+            class="text-[var(--subtext)] hover:text-[var(--text)] text-2xl leading-none"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form method="POST" action="/api/profile/update" class="space-y-4">
+          <div>
+            <label for="username" class="block text-sm font-medium mb-2">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={profile.username}
+              pattern="[a-zA-Z0-9_-]{3,20}"
+              minlength="3"
+              maxlength="20"
+              required
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            />
+            <p class="text-xs text-[var(--subtext)] mt-1">
+              3-20 characters. Letters, numbers, _, - only.
+            </p>
+          </div>
+
+          <div>
+            <label for="display_name" class="block text-sm font-medium mb-2">
+              Display Name
+            </label>
+            <input
+              type="text"
+              id="display_name"
+              name="display_name"
+              value={profile.display_name || ""}
+              maxlength="50"
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            />
+          </div>
+
+          <div>
+            <label for="bio" class="block text-sm font-medium mb-2">
+              Bio
+            </label>
+            <textarea
+              id="bio"
+              name="bio"
+              rows="3"
+              maxlength="160"
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              set:html={profile.bio || ""}
+            />
+            <p class="text-xs text-[var(--subtext)] mt-1">Max 160 characters</p>
+          </div>
+
+          <div class="flex gap-2 pt-2">
+            <button
+              type="submit"
+              class="flex-1 px-4 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent-hover)] transition-colors font-medium"
+            >
+              Save Changes
+            </button>
+            <button
+              type="button"
+              id="cancel-btn"
+              class="px-4 py-2 border rounded-lg hover:bg-[var(--danger)] transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+<script>
+  const editBtn = document.getElementById("edit-profile-btn");
+  const modal = document.getElementById("edit-profile-modal");
+  const closeBtn = document.getElementById("close-modal-btn");
+  const cancelBtn = document.getElementById("cancel-btn");
+
+  editBtn?.addEventListener("click", () => {
+    modal?.classList.remove("hidden");
+  });
+
+  const closeModal = () => {
+    modal?.classList.add("hidden");
+  };
+
+  closeBtn?.addEventListener("click", closeModal);
+  cancelBtn?.addEventListener("click", closeModal);
+
+  // Close on background click
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  // Close on Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !modal?.classList.contains("hidden")) {
+      closeModal();
+    }
+  });
+</script>

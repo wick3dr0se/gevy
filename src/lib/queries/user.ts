@@ -31,5 +31,5 @@ export function getProfileHandle(user: {
   github_username?: string | null;
   username?: string | null;
 }) {
-  return `@${user.github_username || user.username}`;
+  return `@${user.username}`;
 }

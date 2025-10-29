@@ -58,12 +58,41 @@ const postsWithMeta = await getPostsWithMetadata(
   profile.id,
   session.user.id,
 );
+
+const error = Astro.url.searchParams.get("error");
+const success = Astro.url.searchParams.get("success");
+
+const errorMessages: Record<string, string> = {
+  invalid_format: "Username must be 3-20 characters (letters, numbers, _, -)",
+  reserved: "This username is reserved",
+  inappropriate: "This username is not allowed",
+  inappropriate_display_name: "Display name contains inappropriate content",
+  inappropriate_bio: "Bio contains inappropriate content",
+  taken: "This username is already taken",
+  failed: "Failed to update profile. Please try again.",
+};
 ---
 
 <Layout title={`${getDisplayName(profile)} - Gevy`}>
   <Header user={currentUserProfile} />
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {
+      success === "updated" && (
+        <div class="mb-4 p-4 bg-[var(--success)] text-white rounded-lg">
+          ✓ Profile updated successfully!
+        </div>
+      )
+    }
+
+    {
+      error && (
+        <div class="mb-4 p-4 bg-[var(--danger)] text-white rounded-lg">
+          {errorMessages[error] || "An error occurred"}
+        </div>
+      )
+    }
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2 space-y-8">
         <ProfileCard
