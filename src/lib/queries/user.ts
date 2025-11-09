@@ -1,35 +1,21 @@
-export function getAvatarUrl(user: {
-  username?: string | null;
-  github_username?: string | null;
-  avatar_url?: string | null;
-  github_avatar_url?: string | null;
-}) {
-  return (
-    user.avatar_url ??
-    (user.username
-      ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
-      : (user.github_avatar_url ?? "/default-avatar.svg"))
-  );
+import type { Profile } from '$lib/supabase';
+
+export function getDisplayName(user: Profile): string {
+	return user.display_name || user.username || 'Developer';
 }
 
-export function getDisplayName(user: {
-  display_name?: string | null;
-  username?: string | null;
-  github_username?: string | null;
-}) {
-  return user.display_name || user.username || user.github_username || "User";
+export function getProfileLink(user: Profile): string {
+	return `/profile/${user.username}`;
 }
 
-export function getProfileLink(user: {
-  username?: string | null;
-  github_username?: string | null;
-}) {
-  return `/profile/${user.username || user.github_username}`;
+export function getProfileHandle(user: Profile): string {
+	return `@${user.username || user.github_username || 'user'}`;
 }
 
-export function getProfileHandle(user: {
-  github_username?: string | null;
-  username?: string | null;
-}) {
-  return `@${user.username}`;
+export function getAvatarUrl(user: Profile): string {
+	return (
+		user.avatar_url ||
+		user.github_avatar_url ||
+		`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`
+	);
 }

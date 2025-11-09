@@ -1,26 +1,6 @@
 # Gevy
 
-**Gevy** is an open-source social platform for developers, powered by **Astro**, **TailwindCSS**, **Supabase**, and deployed on **Vercel**
-
-## Stack Used
-
-- **[Astro](https://astro.build/)** — Fast, modern frontend framework
-- **[TailwindCSS](https://tailwindcss.com/)** — Utility-first styling
-- **[Supabase](https://supabase.com/)** — Auth, DB, and real-time backend
-- **[Vercel](https://vercel.com/)** — Fast global deployments
-
-## Project Structure
-
-```text
-/
-├── public/              # Static assets (favicon, logos, etc.)
-├── src/
-│   ├── components/      # Reusable UI components
-│   ├── layouts/         # Shared page layouts
-│   ├── pages/           # Astro routes
-│   ├── lib/             # Supabase + GitHub API + helpers
-└── package.json
-```
+**Gevy** is an open-source public devlog platform for developers, built with **SvelteKit**, **TailwindCSS**, **Supabase**, and deployed on **Vercel**
 
 ## Getting Started (Self Hosting)
 
@@ -33,7 +13,7 @@ npm install
 ```
 
 2. Setup Supabase
-   Create a new [Supabase](https://supabase.com/) project, then copy your credentials into .env, like:
+   Create a new [Supabase](https://supabase.com/) project, then copy your secrets into .env, like:
 
 ```bash
 SUPABASE_URL=...
