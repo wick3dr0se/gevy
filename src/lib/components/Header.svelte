@@ -2,6 +2,7 @@
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import Avatar from './users/Avatar.svelte';
+	import NotificationBell from './NotificationBell.svelte';
 	import { getDisplayName, getProfileLink } from '$lib/queries/user';
 	import type { Profile } from '$lib/supabase';
 	import logo from '$lib/assets/logo.svg';
@@ -89,6 +90,7 @@
 
 			{#if user}
 				<div class="flex items-center gap-2 sm:gap-4">
+					<NotificationBell />
 					<a
 						href={getProfileLink(user)}
 						class="group flex items-center gap-2"

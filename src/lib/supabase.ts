@@ -1,6 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import type { RequestEvent } from '@sveltejs/kit';
+
+const SUPABASE_URL = env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+	throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY must be set in .env file');
+}
 
 // Browser client (public)
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -36,11 +43,21 @@ export function createServerSupabaseClient(event: RequestEvent) {
 
 // Service role client (admin operations)
 export function createServiceSupabaseClient() {
-	const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+	const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
 	if (!serviceKey) {
 		throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
 	}
-	return createClient(SUPABASE_URL, serviceKey);
+	return createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+		auth: {
+			persistSession: false,
+			autoRefreshToken: false
+		},
+		global: {
+			headers: {
+				Authorization: `Bearer ${serviceKey}`
+			}
+		}
+	});
 }
 
 // Types
@@ -150,6 +167,22 @@ export interface PostLike {
 	post_id: string;
 	user_id: string;
 	created_at: string;
+}
+
+export interface Notification {
+	id: string;
+	user_id: string;
+	type: 'like' | 'comment' | 'follow';
+	actor_id: string;
+	post_id: string | null;
+	comment_id: string | null;
+	is_read: boolean;
+	created_at: string;
+}
+
+export interface NotificationWithActor extends Notification {
+	actor: Profile;
+	post?: Post;
 }
 
 export interface GitHubRepo {
